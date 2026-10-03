@@ -1,0 +1,18 @@
+# Signing material - never commit keystores or private keys.
+*.jks
+*.keystore
+*.p12
+*.pfx
+*-key.pem
+*-cert.der
+
+# Third-party tooling fetched on demand (uber-apk-signer.jar, apktool.jar).
+*.jar
+
+# Decompiler working directories.
+apktool/
+jadx/
+classes.dex
+
+# Unsigned intermediates.
+*-unsigned.apk
