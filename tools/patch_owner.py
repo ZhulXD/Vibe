@@ -147,5 +147,26 @@ patch_method(
     ".end method\n",
 )
 
+# 7) BigInteger.TWO is API 33+, but MinHub declares minSdk 24. The single
+#    reference lives in a synthetic bridge (N1/x.<clinit> is its only caller),
+#    so swapping the constant read for valueOf(2) is a complete fix.
+nv = SMALI / "N1" / "v.smali"
+patch_method(
+    nv,
+    "i()Ljava/math/BigInteger;",
+    ".method public static bridge synthetic i()Ljava/math/BigInteger;\n"
+    "    .locals 2\n"
+    "\n"
+    "    const-wide/16 v0, 0x2\n"
+    "\n"
+    "    invoke-static {v0, v1}, Ljava/math/BigInteger;->valueOf(J)"
+    "Ljava/math/BigInteger;\n"
+    "\n"
+    "    move-result-object v0\n"
+    "\n"
+    "    return-object v0\n"
+    ".end method\n",
+)
+
 print("\n".join(report))
 print(f"\n{len(report)} patches applied.")
