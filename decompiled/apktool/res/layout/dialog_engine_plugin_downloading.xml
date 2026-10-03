@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:background="@drawable/bg_dialog_account" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:gravity="center_horizontal" android:orientation="vertical" android:paddingTop="28.0dp" android:paddingBottom="20.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="24.0dp" android:paddingEnd="24.0dp">
+        <FrameLayout android:background="@drawable/bg_account_badge" android:layout_width="56.0dp" android:layout_height="56.0dp" android:layout_marginBottom="14.0dp">
+            <TextView android:textSize="22.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="↓" />
+        </FrameLayout>
+        <TextView android:textSize="10.0sp" android:textColor="@color/accent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="6.0dp" android:text="@string/engine_plugin_dl_badge" android:letterSpacing="0.15" />
+        <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:gravity="center" android:id="@id/tv_plugin_dl_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="20.0dp" />
+        <ProgressBar android:id="@id/pb_plugin_download" android:layout_width="match_parent" android:layout_height="6.0dp" android:layout_marginBottom="8.0dp" android:max="100" android:progress="0" android:progressTint="@color/accent" android:progressBackgroundTint="@color/s4" style="?android:progressBarStyleHorizontal" />
+        <TextView android:textSize="13.0sp" android:textColor="@color/text_sec" android:id="@id/tv_plugin_dl_percent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0%" />
+    </LinearLayout>
+    <View android:background="@color/s4" android:layout_width="match_parent" android:layout_height="1.0dp" />
+    <TextView android:textSize="12.0sp" android:textColor="@color/text_mut" android:gravity="center" android:paddingLeft="24.0dp" android:paddingTop="14.0dp" android:paddingRight="24.0dp" android:paddingBottom="14.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/engine_plugin_downloading_msg" android:paddingHorizontal="24.0dp" android:paddingVertical="14.0dp" />
+</LinearLayout>

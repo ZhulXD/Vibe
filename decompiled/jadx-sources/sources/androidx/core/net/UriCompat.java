@@ -1,0 +1,48 @@
+package androidx.core.net;
+
+import android.net.Uri;
+import kotlin.collections.unsigned.a;
+
+/* JADX INFO: compiled from: r8-map-id-c6cf1983ffca914c12120f7cf25210053c773eeac8162410aa5a458fd7588401 */
+/* JADX INFO: loaded from: classes.dex */
+public final class UriCompat {
+    private UriCompat() {
+    }
+
+    public static String toSafeString(Uri uri) {
+        String scheme = uri.getScheme();
+        String schemeSpecificPart = uri.getSchemeSpecificPart();
+        if (scheme != null) {
+            if (scheme.equalsIgnoreCase("tel") || scheme.equalsIgnoreCase("sip") || scheme.equalsIgnoreCase("sms") || scheme.equalsIgnoreCase("smsto") || scheme.equalsIgnoreCase("mailto") || scheme.equalsIgnoreCase("nfc")) {
+                StringBuilder sb = new StringBuilder(64);
+                sb.append(scheme);
+                sb.append(':');
+                if (schemeSpecificPart != null) {
+                    for (int i3 = 0; i3 < schemeSpecificPart.length(); i3++) {
+                        char cCharAt = schemeSpecificPart.charAt(i3);
+                        if (cCharAt == '-' || cCharAt == '@' || cCharAt == '.') {
+                            sb.append(cCharAt);
+                        } else {
+                            sb.append('x');
+                        }
+                    }
+                }
+                return sb.toString();
+            }
+            if (scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https") || scheme.equalsIgnoreCase("ftp") || scheme.equalsIgnoreCase("rtsp")) {
+                StringBuilder sb2 = new StringBuilder("//");
+                sb2.append(uri.getHost() != null ? uri.getHost() : "");
+                schemeSpecificPart = a.i(sb2, uri.getPort() != -1 ? ":" + uri.getPort() : "", "/...");
+            }
+        }
+        StringBuilder sb3 = new StringBuilder(64);
+        if (scheme != null) {
+            sb3.append(scheme);
+            sb3.append(':');
+        }
+        if (schemeSpecificPart != null) {
+            sb3.append(schemeSpecificPart);
+        }
+        return sb3.toString();
+    }
+}

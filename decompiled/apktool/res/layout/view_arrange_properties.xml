@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:layout_gravity="bottom" android:orientation="vertical" android:id="@id/layout_arrange_properties" android:background="#f40b0d12" android:paddingTop="14.0dp" android:paddingBottom="18.0dp" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="20.0dp" android:paddingEnd="20.0dp" android:elevation="18.0dp"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/accent" android:id="@id/tv_arrange_selected" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/arrange_customize" android:layout_weight="1.0" />
+        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:gravity="center" android:id="@id/btn_toggle_customize" android:background="@drawable/bg_arrange_toggle" android:layout_width="32.0dp" android:layout_height="32.0dp" android:text="@string/menu_section_chevron_expanded" android:layout_marginEnd="8.0dp" />
+        <TextView android:textSize="16.0sp" android:textColor="@color/text_mut" android:gravity="center" android:id="@id/btn_close_customize" android:layout_width="28.0dp" android:layout_height="28.0dp" android:text="@string/label_close_x" />
+    </LinearLayout>
+    <LinearLayout android:orientation="vertical" android:id="@id/layout_arrange_body" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:textSize="9.0sp" android:textStyle="bold" android:textColor="@color/text_mut" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12.0dp" android:text="@string/arrange_shape" />
+        <LinearLayout android:orientation="horizontal" android:id="@id/shape_row" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6.0dp">
+            <LinearLayout android:gravity="center" android:orientation="horizontal" android:id="@id/btn_shape_circle" android:paddingLeft="12.0dp" android:paddingTop="10.0dp" android:paddingRight="12.0dp" android:paddingBottom="10.0dp" android:layout_width="0.0dp" android:layout_height="wrap_content" android:minHeight="44.0dp" android:layout_weight="1.0" android:paddingHorizontal="12.0dp" android:paddingVertical="10.0dp">
+                <View android:background="#ffffffff" android:layout_width="16.0dp" android:layout_height="16.0dp" />
+                <TextView android:textSize="10.0sp" android:textColor="@color/text_sec" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/arrange_shape_circle" android:layout_marginStart="8.0dp" />
+            </LinearLayout>
+            <LinearLayout android:gravity="center" android:orientation="horizontal" android:id="@id/btn_shape_rounded" android:paddingLeft="12.0dp" android:paddingTop="10.0dp" android:paddingRight="12.0dp" android:paddingBottom="10.0dp" android:layout_width="0.0dp" android:layout_height="wrap_content" android:minHeight="44.0dp" android:layout_weight="1.0" android:layout_marginStart="8.0dp" android:paddingHorizontal="12.0dp" android:paddingVertical="10.0dp">
+                <View android:background="#ffffffff" android:layout_width="16.0dp" android:layout_height="16.0dp" />
+                <TextView android:textSize="10.0sp" android:textColor="@color/text_sec" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/arrange_shape_rounded" android:layout_marginStart="8.0dp" />
+            </LinearLayout>
+            <LinearLayout android:gravity="center" android:orientation="horizontal" android:id="@id/btn_shape_rect" android:paddingLeft="12.0dp" android:paddingTop="10.0dp" android:paddingRight="12.0dp" android:paddingBottom="10.0dp" android:layout_width="0.0dp" android:layout_height="wrap_content" android:minHeight="44.0dp" android:layout_weight="1.0" android:layout_marginStart="8.0dp" android:paddingHorizontal="12.0dp" android:paddingVertical="10.0dp">
+                <View android:background="#ffffffff" android:layout_width="18.0dp" android:layout_height="12.0dp" />
+                <TextView android:textSize="10.0sp" android:textColor="@color/text_sec" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/arrange_shape_square" android:layout_marginStart="8.0dp" />
+            </LinearLayout>
+        </LinearLayout>
+        <TextView android:textSize="9.0sp" android:textStyle="bold" android:textColor="@color/text_mut" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12.0dp" android:text="@string/arrange_color" />
+        <HorizontalScrollView android:scrollbars="none" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6.0dp">
+            <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
+                <View android:id="@id/color_green" android:background="#22c55e" android:layout_width="24.0dp" android:layout_height="24.0dp" />
+                <View android:id="@id/color_red" android:background="#ef4444" android:layout_width="24.0dp" android:layout_height="24.0dp" android:layout_marginStart="8.0dp" />
+                <View android:id="@id/color_blue" android:background="#3b82f6" android:layout_width="24.0dp" android:layout_height="24.0dp" android:layout_marginStart="8.0dp" />
+                <View android:id="@id/color_yellow" android:background="#f59e0b" android:layout_width="24.0dp" android:layout_height="24.0dp" android:layout_marginStart="8.0dp" />
+                <View android:id="@id/color_purple" android:background="#8b5cf6" android:layout_width="24.0dp" android:layout_height="24.0dp" android:layout_marginStart="8.0dp" />
+                <View android:id="@id/color_orange" android:background="#f97316" android:layout_width="24.0dp" android:layout_height="24.0dp" android:layout_marginStart="8.0dp" />
+                <View android:id="@id/color_pink" android:background="#ec4899" android:layout_width="24.0dp" android:layout_height="24.0dp" android:layout_marginStart="8.0dp" />
+                <View android:id="@id/color_gray" android:background="#6b7280" android:layout_width="24.0dp" android:layout_height="24.0dp" android:layout_marginStart="8.0dp" />
+                <View android:id="@id/color_white" android:background="#f5f5f5" android:layout_width="24.0dp" android:layout_height="24.0dp" android:layout_marginStart="8.0dp" />
+            </LinearLayout>
+        </HorizontalScrollView>
+        <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12.0dp">
+            <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0">
+                <TextView android:textSize="10.0sp" android:textColor="@color/text_sec" android:id="@id/tv_size_label" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/arrange_size" />
+                <SeekBar android:id="@id/seek_size" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="140" android:progress="36" android:progressTint="@color/accent" android:thumbTint="@color/accent" />
+            </LinearLayout>
+            <Space android:layout_width="16.0dp" android:layout_height="1.0dp" />
+            <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0">
+                <TextView android:textSize="10.0sp" android:textColor="@color/text_sec" android:id="@id/tv_opacity_label" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/arrange_opacity" />
+                <SeekBar android:id="@id/seek_opacity" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="100" android:progressTint="@color/accent" android:thumbTint="@color/accent" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

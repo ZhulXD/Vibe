@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:background="@color/bg" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <FrameLayout android:id="@id/hero_frame" android:layout_width="match_parent" android:layout_height="188.0dp">
+        <ImageView android:id="@id/img_hero" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" />
+        <TextView android:textSize="26.0sp" android:textColor="#66ffffff" android:layout_gravity="center" android:id="@id/tv_hero_abbr" android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="sans-serif-black" />
+        <View android:background="@drawable/fade_to_bg" android:layout_width="match_parent" android:layout_height="match_parent" />
+        <ImageButton android:layout_gravity="start|top" android:id="@id/btn_back" android:background="@drawable/bg_btn_icon_dark" android:padding="6.0dp" android:layout_width="34.0dp" android:layout_height="34.0dp" android:layout_margin="12.0dp" android:src="@drawable/ic_back" android:tint="@android:color/white" />
+    </FrameLayout>
+    <LinearLayout android:gravity="top" android:orientation="vertical" android:paddingLeft="16.0dp" android:paddingRight="16.0dp" android:paddingBottom="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="16.0dp">
+        <TextView android:textSize="18.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="6.0dp" />
+        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <TextView android:textSize="9.0sp" android:textStyle="bold" android:textColor="@color/accent" android:id="@id/tv_badge" android:paddingLeft="8.0dp" android:paddingTop="3.0dp" android:paddingRight="8.0dp" android:paddingBottom="3.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="8.0dp" android:paddingHorizontal="8.0dp" android:paddingVertical="3.0dp" />
+            <TextView android:textSize="11.0sp" android:textColor="@color/text_mut" android:id="@id/tv_meta" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </LinearLayout>
+    </LinearLayout>
+    <com.google.android.material.tabs.TabLayout android:id="@id/tabs" android:background="@color/s1" android:layout_width="match_parent" android:layout_height="wrap_content" app:tabIndicatorColor="@color/accent" app:tabMode="fixed" app:tabSelectedTextColor="@color/accent" app:tabTextColor="@color/text_mut" />
+    <FrameLayout android:layout_width="match_parent" android:layout_height="0.0dp" android:layout_weight="1.0">
+        <ScrollView android:id="@id/panel_info" android:layout_width="match_parent" android:layout_height="match_parent">
+            <LinearLayout android:orientation="vertical" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/text_mut" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/online_detail_section_categories" />
+                <TextView android:textSize="13.0sp" android:textColor="@color/text_pri" android:id="@id/tv_categories" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4.0dp" android:layout_marginBottom="14.0dp" />
+                <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/text_mut" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/online_detail_section_tags" />
+                <TextView android:textSize="13.0sp" android:textColor="@color/text_pri" android:id="@id/tv_tags" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4.0dp" android:layout_marginBottom="14.0dp" />
+                <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/text_mut" android:id="@id/label_size" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/game_detail_size" />
+                <TextView android:textSize="13.0sp" android:textColor="@color/text_pri" android:id="@id/tv_size" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4.0dp" android:layout_marginBottom="14.0dp" />
+                <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/text_mut" android:id="@id/label_translator" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/online_detail_section_translator" />
+                <TextView android:textSize="13.0sp" android:textColor="@color/text_pri" android:id="@id/tv_translator" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4.0dp" android:layout_marginBottom="14.0dp" />
+                <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/text_mut" android:id="@id/label_store" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/online_detail_section_store" />
+                <HorizontalScrollView android:id="@id/scroll_store_links" android:visibility="gone" android:scrollbars="none" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6.0dp" android:layout_marginBottom="14.0dp">
+                    <LinearLayout android:orientation="horizontal" android:id="@id/row_store_links" android:layout_width="wrap_content" android:layout_height="wrap_content">
+                        <TextView android:textSize="12.0sp" android:textColor="@color/accent" android:id="@id/btn_store_steam" android:background="@drawable/bg_btn_outline" android:paddingLeft="12.0dp" android:paddingTop="7.0dp" android:paddingRight="12.0dp" android:paddingBottom="7.0dp" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Steam" android:layout_marginEnd="8.0dp" />
+                        <TextView android:textSize="12.0sp" android:textColor="@color/accent" android:id="@id/btn_store_dlsite" android:background="@drawable/bg_btn_outline" android:paddingLeft="12.0dp" android:paddingTop="7.0dp" android:paddingRight="12.0dp" android:paddingBottom="7.0dp" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="DLsite" android:layout_marginEnd="8.0dp" />
+                        <TextView android:textSize="12.0sp" android:textColor="@color/accent" android:id="@id/btn_store_dmm" android:background="@drawable/bg_btn_outline" android:paddingLeft="12.0dp" android:paddingTop="7.0dp" android:paddingRight="12.0dp" android:paddingBottom="7.0dp" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="DMM" android:layout_marginEnd="8.0dp" />
+                        <TextView android:textSize="12.0sp" android:textColor="@color/accent" android:id="@id/btn_store_itchio" android:background="@drawable/bg_btn_outline" android:paddingLeft="12.0dp" android:paddingTop="7.0dp" android:paddingRight="12.0dp" android:paddingBottom="7.0dp" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="itch.io" android:layout_marginEnd="8.0dp" />
+                        <TextView android:textSize="12.0sp" android:textColor="@color/accent" android:id="@id/btn_store_other" android:background="@drawable/bg_btn_outline" android:paddingLeft="12.0dp" android:paddingTop="7.0dp" android:paddingRight="12.0dp" android:paddingBottom="7.0dp" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_store_other" />
+                    </LinearLayout>
+                </HorizontalScrollView>
+                <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/text_mut" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/online_detail_section_content" />
+                <TextView android:textSize="13.0sp" android:textColor="@color/text_sec" android:id="@id/tv_content" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6.0dp" android:lineSpacingMultiplier="1.6" />
+            </LinearLayout>
+        </ScrollView>
+        <ScrollView android:id="@id/panel_download" android:visibility="gone" android:layout_width="match_parent" android:layout_height="match_parent">
+            <LinearLayout android:orientation="vertical" android:padding="20.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/text_mut" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="10.0dp" android:text="@string/download_section_host" />
+                <LinearLayout android:orientation="vertical" android:id="@id/ll_download_buttons" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                <ProgressBar android:id="@id/progress_download" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20.0dp" android:max="100" style="@style/Widget.AppCompat.ProgressBar.Horizontal" />
+                <TextView android:textSize="13.0sp" android:textColor="@color/text_sec" android:gravity="center" android:id="@id/tv_download_status" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10.0dp" />
+                <Button android:id="@id/btn_go_library" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20.0dp" android:text="@string/go_library" />
+            </LinearLayout>
+        </ScrollView>
+        <LinearLayout android:orientation="vertical" android:id="@id/panel_image" android:padding="16.0dp" android:visibility="gone" android:layout_width="match_parent" android:layout_height="match_parent">
+            <TextView android:textSize="13.0sp" android:textColor="@color/text_mut" android:gravity="center" android:id="@id/tv_gallery_empty" android:paddingTop="18.0dp" android:paddingBottom="18.0dp" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/online_detail_gallery_empty" android:paddingVertical="18.0dp" />
+            <androidx.recyclerview.widget.RecyclerView android:id="@id/recycler_images" android:clipToPadding="false" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingEnd="8.0dp" />
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView android:background="@color/bg" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:orientation="vertical" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:textSize="18.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="20.0dp" android:text="@string/profile_title" />
+        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:background="@drawable/bg_card" android:padding="18.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="20.0dp">
+            <FrameLayout android:background="@drawable/bg_avatar" android:layout_width="56.0dp" android:layout_height="56.0dp" android:layout_marginEnd="16.0dp">
+                <TextView android:textSize="24.0sp" android:textStyle="bold" android:textColor="@color/accent" android:layout_gravity="center" android:id="@id/tv_avatar_letter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_avatar_initial" />
+            </FrameLayout>
+            <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0">
+                <TextView android:textSize="15.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_username" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_username_default" />
+                <TextView android:textSize="11.0sp" android:textColor="@color/text_mut" android:id="@id/tv_email" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" android:text="@string/label_email_default" />
+                <TextView android:textSize="10.0sp" android:textColor="@color/accent" android:id="@id/tv_patreon_badge" android:background="@drawable/bg_badge" android:paddingLeft="8.0dp" android:paddingTop="2.0dp" android:paddingRight="8.0dp" android:paddingBottom="2.0dp" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6.0dp" android:text="@string/label_patreon_member" android:paddingHorizontal="8.0dp" android:paddingVertical="2.0dp" />
+            </LinearLayout>
+        </LinearLayout>
+        <GridLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="24.0dp" android:rowCount="2" android:columnCount="2">
+            <LinearLayout android:gravity="center" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="14.0dp" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_margin="5.0dp" android:layout_columnWeight="1.0">
+                <TextView android:textSize="20.0sp" android:textStyle="bold" android:textColor="@color/accent" android:id="@id/tv_installed" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" />
+                <TextView android:textSize="10.0sp" android:textColor="@color/text_mut" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_games_installed_short" />
+            </LinearLayout>
+            <LinearLayout android:gravity="center" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="14.0dp" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_margin="5.0dp" android:layout_columnWeight="1.0">
+                <TextView android:textSize="20.0sp" android:textStyle="bold" android:textColor="@color/accent" android:id="@id/tv_hours" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0h" />
+                <TextView android:textSize="10.0sp" android:textColor="@color/text_mut" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_total_playtime" />
+            </LinearLayout>
+            <LinearLayout android:gravity="center" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="14.0dp" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_margin="5.0dp" android:layout_columnWeight="1.0">
+                <TextView android:textSize="20.0sp" android:textStyle="bold" android:textColor="@color/accent" android:id="@id/tv_saves" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" />
+                <TextView android:textSize="10.0sp" android:textColor="@color/text_mut" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_save_files" />
+            </LinearLayout>
+            <LinearLayout android:gravity="center" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="14.0dp" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_margin="5.0dp" android:layout_columnWeight="1.0">
+                <TextView android:textSize="20.0sp" android:textStyle="bold" android:textColor="@color/accent" android:id="@id/tv_plugins" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" />
+                <TextView android:textSize="10.0sp" android:textColor="@color/text_mut" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_plugins" />
+            </LinearLayout>
+        </GridLayout>
+        <Button android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/danger" android:id="@id/btn_logout" android:background="@drawable/bg_btn_outline_danger" android:padding="13.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/label_logout" android:textAllCaps="false" />
+    </LinearLayout>
+</ScrollView>

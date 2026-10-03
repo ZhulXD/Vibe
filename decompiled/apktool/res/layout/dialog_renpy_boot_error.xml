@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:background="@drawable/bg_dialog_account" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:orientation="vertical" android:paddingTop="24.0dp" android:paddingBottom="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="24.0dp" android:paddingEnd="24.0dp">
+        <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/renpy_boot_failed_title" />
+        <TextView android:textSize="13.0sp" android:textColor="@color/text_sec" android:id="@id/tv_renpy_boot_body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" android:text="@string/renpy_boot_failed_body" android:lineSpacingMultiplier="1.35" />
+        <ScrollView android:background="@drawable/bg_chip_dark" android:padding="10.0dp" android:layout_width="match_parent" android:layout_height="200.0dp" android:layout_marginTop="14.0dp">
+            <TextView android:textSize="11.0sp" android:typeface="monospace" android:textColor="@color/text_sec" android:id="@id/tv_renpy_boot_error" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textIsSelectable="true" />
+        </ScrollView>
+    </LinearLayout>
+    <View android:background="@color/s4" android:layout_width="match_parent" android:layout_height="1.0dp" />
+    <LinearLayout android:gravity="end" android:orientation="horizontal" android:paddingTop="14.0dp" android:paddingBottom="14.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="16.0dp" android:paddingEnd="16.0dp">
+        <TextView android:textSize="13.0sp" android:textColor="@color/text_sec" android:gravity="center" android:id="@id/btn_renpy_boot_copy" android:background="@drawable/bg_btn_outline" android:paddingLeft="16.0dp" android:paddingRight="16.0dp" android:layout_width="wrap_content" android:layout_height="38.0dp" android:minWidth="88.0dp" android:text="@string/renpy_boot_failed_copy" android:layout_marginEnd="8.0dp" android:paddingHorizontal="16.0dp" />
+        <TextView android:textSize="13.0sp" android:textColor="@android:color/white" android:gravity="center" android:id="@id/btn_renpy_boot_close" android:background="@drawable/bg_btn_accent" android:paddingLeft="16.0dp" android:paddingRight="16.0dp" android:layout_width="wrap_content" android:layout_height="38.0dp" android:minWidth="88.0dp" android:text="@string/renpy_boot_failed_close" android:paddingHorizontal="16.0dp" />
+    </LinearLayout>
+</LinearLayout>

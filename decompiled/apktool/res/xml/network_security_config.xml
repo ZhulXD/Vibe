@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="@raw/gts_root_r4" />
+            <certificates src="@raw/isrg_root_x1" />
+        </trust-anchors>
+    </base-config>
+    <domain-config>
+        <domain includeSubdomains="true">mediafire.com</domain>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="@raw/sslcom_tls_rsa_root_2022" />
+        </trust-anchors>
+    </domain-config>
+</network-security-config>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:background="@color/bg" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/layout_header" android:padding="16.0dp" android:paddingBottom="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/ScreenHeader">
+        <ImageButton android:id="@id/btn_back" android:background="@null" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/ic_back" android:tint="@color/text_sec" android:layout_marginEnd="12.0dp" />
+        <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/add_game_title" android:layout_weight="1.0" />
+        <ImageButton android:enabled="false" android:id="@id/btn_filter" android:background="@drawable/bg_btn_icon_dark" android:padding="8.0dp" android:layout_width="40.0dp" android:layout_height="40.0dp" android:src="@android:drawable/ic_menu_sort_by_size" android:tint="@android:color/white" android:contentDescription="@string/add_game_filter" android:layout_marginEnd="8.0dp" />
+        <FrameLayout android:layout_width="40.0dp" android:layout_height="40.0dp">
+            <ImageButton android:id="@id/btn_more" android:background="@drawable/bg_btn_icon_dark" android:padding="8.0dp" android:layout_width="40.0dp" android:layout_height="40.0dp" android:src="@drawable/ic_add" android:tint="@android:color/white" android:contentDescription="@string/add_game_actions" />
+            <View android:layout_gravity="end|top" android:id="@id/view_download_badge" android:background="@drawable/bg_circle" android:visibility="gone" android:layout_width="8.0dp" android:layout_height="8.0dp" android:layout_marginTop="6.0dp" android:layout_marginEnd="6.0dp" android:backgroundTint="@color/accent" />
+        </FrameLayout>
+    </LinearLayout>
+    <View android:background="@color/s2" android:layout_width="match_parent" android:layout_height="1.0dp" />
+    <FrameLayout android:id="@id/content_frame" android:layout_width="match_parent" android:layout_height="0.0dp" android:layout_weight="1.0">
+        <LinearLayout android:orientation="vertical" android:id="@id/layout_catalog" android:paddingLeft="16.0dp" android:paddingTop="16.0dp" android:paddingRight="16.0dp" android:paddingBottom="12.0dp" android:layout_width="match_parent" android:layout_height="match_parent" android:paddingHorizontal="16.0dp">
+            <ProgressBar android:id="@id/progress_catalog" android:visibility="gone" android:layout_width="match_parent" android:layout_height="4.0dp" android:indeterminate="true" android:indeterminateTint="@color/accent" style="?android:progressBarStyleHorizontal" />
+            <TextView android:textSize="13.0sp" android:textColor="@color/text_mut" android:gravity="center" android:id="@id/tv_catalog_message" android:paddingTop="24.0dp" android:paddingBottom="24.0dp" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="24.0dp" />
+            <androidx.recyclerview.widget.RecyclerView android:id="@id/recycler_catalog" android:paddingBottom="12.0dp" android:clipToPadding="false" android:layout_width="match_parent" android:layout_height="0.0dp" android:layout_weight="1.0" />
+            <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/layout_pager" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content">
+                <Button android:textColor="@color/text_pri" android:id="@id/btn_prev_page" android:background="@drawable/bg_btn_outline" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/catalog_previous_page" android:textAllCaps="false" />
+                <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="@color/text_sec" android:gravity="center" android:id="@id/tv_page_indicator" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_marginLeft="12.0dp" android:layout_marginRight="12.0dp" android:layout_weight="1.0" android:layout_marginHorizontal="12.0dp" />
+                <Button android:textColor="@color/text_pri" android:id="@id/btn_next_page" android:background="@drawable/bg_btn_outline" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/catalog_next_page" android:textAllCaps="false" />
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout android:gravity="center" android:orientation="vertical" android:id="@id/layout_step1" android:padding="40.0dp" android:visibility="gone" android:layout_width="match_parent" android:layout_height="match_parent">
+            <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_import_status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="18.0dp" android:text="@string/label_importing" />
+            <ProgressBar android:id="@id/progress_import" android:layout_width="match_parent" android:layout_height="6.0dp" android:layout_marginBottom="10.0dp" android:max="100" android:progressTint="@color/accent" android:progressBackgroundTint="@color/s2" style="?android:progressBarStyleHorizontal" />
+            <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="@color/accent" android:id="@id/tv_progress_pct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_percent" />
+        </LinearLayout>
+        <LinearLayout android:gravity="center" android:orientation="vertical" android:id="@id/layout_step2" android:padding="40.0dp" android:visibility="gone" android:layout_width="match_parent" android:layout_height="match_parent">
+            <FrameLayout android:background="@drawable/bg_success_icon" android:layout_width="64.0dp" android:layout_height="64.0dp" android:layout_marginBottom="16.0dp">
+                <TextView android:textSize="28.0sp" android:textColor="@color/success" android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_checkmark" />
+            </FrameLayout>
+            <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="16.0dp" android:text="@string/import_success" />
+            <Button android:textStyle="bold" android:textColor="@android:color/white" android:id="@id/btn_go_library" android:background="@drawable/bg_btn_accent" android:paddingLeft="36.0dp" android:paddingTop="13.0dp" android:paddingRight="36.0dp" android:paddingBottom="13.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/go_library" android:textAllCaps="false" android:paddingHorizontal="36.0dp" android:paddingVertical="13.0dp" />
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>

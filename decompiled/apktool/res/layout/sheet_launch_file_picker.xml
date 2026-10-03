@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:background="@drawable/bg_gamepad_sheet" android:padding="20.0dp" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:textSize="18.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/launchPickTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/launch_pick_title" />
+    <TextView android:textSize="12.0sp" android:textColor="@color/text_sec" android:id="@id/launchPickHint" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6.0dp" />
+    <androidx.core.widget.NestedScrollView android:scrollbars="none" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16.0dp" android:maxHeight="360.0dp" android:overScrollMode="ifContentScrolls">
+        <androidx.recyclerview.widget.RecyclerView android:id="@id/launchPickList" android:layout_width="match_parent" android:layout_height="wrap_content" android:nestedScrollingEnabled="false" />
+    </androidx.core.widget.NestedScrollView>
+    <Button android:textColor="@android:color/white" android:id="@id/launchPickWizardButton" android:background="@drawable/bg_gamepad_sheet_button_primary" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18.0dp" android:text="@string/launch_pick_open_kiri_wizard" android:textAllCaps="false" />
+    <Button android:textColor="@color/text_pri" android:id="@id/launchPickCancelButton" android:background="@drawable/bg_gamepad_sheet_button_secondary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" android:text="@string/launch_pick_cancel" android:textAllCaps="false" />
+</LinearLayout>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:background="#000000" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <FrameLayout android:id="@id/game_area" android:background="@drawable/bg_game_area" android:layout_width="match_parent" android:layout_height="match_parent">
+        <com.minhub.gamehub.editor.EditModeOverlay android:id="@id/edit_overlay" android:layout_width="match_parent" android:layout_height="match_parent" />
+    </FrameLayout>
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:background="#cc000000" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <ImageButton android:id="@id/btn_back" android:background="?selectableItemBackgroundBorderless" android:layout_width="40.0dp" android:layout_height="40.0dp" android:src="@drawable/ic_back" android:tint="#ffffff" />
+        <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ffffff" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/label_button_editor_title" android:layout_weight="1.0" android:layout_marginStart="12.0dp" />
+        <Button android:textSize="12.0sp" android:textColor="#ffffff" android:id="@id/btn_add_button" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_add_button" style="@style/Widget.MaterialComponents.Button.TextButton" />
+        <Button android:textColor="#ffffff" android:id="@id/btn_save" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_save_short" android:backgroundTint="@color/accent" />
+    </LinearLayout>
+    <LinearLayout android:layout_gravity="end" android:orientation="vertical" android:id="@id/panel_properties" android:background="#e6000000" android:padding="12.0dp" android:visibility="gone" android:layout_width="180.0dp" android:layout_height="match_parent" android:layout_marginTop="60.0dp" android:layout_marginBottom="12.0dp" android:layout_marginEnd="12.0dp">
+        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="#ffffff" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" android:text="@string/label_edit_short" />
+        <TextView android:textSize="12.0sp" android:textColor="#aaaaaa" android:id="@id/tv_selected_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16.0dp" android:text="@string/label_not_selected" />
+        <TextView android:textSize="11.0sp" android:textColor="#ffffff" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_size_short" />
+        <SeekBar android:id="@id/sb_size" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" android:max="100" android:progress="50" />
+        <TextView android:textSize="11.0sp" android:textColor="#ffffff" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_opacity_short" />
+        <SeekBar android:id="@id/sb_opacity" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" android:max="100" android:progress="60" />
+        <Button android:enabled="false" android:textSize="11.0sp" android:textColor="#cccccc" android:id="@id/btn_key_binding" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8.0dp" android:text="@string/label_key_binding" app:strokeColor="#666666" style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+        <Button android:textSize="11.0sp" android:textColor="#cccccc" android:id="@id/btn_reset_pos" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8.0dp" android:text="@string/label_reset_position" app:strokeColor="#666666" style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+        <Button android:enabled="false" android:textSize="11.0sp" android:textColor="#ef4444" android:id="@id/btn_delete_button" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/label_delete_button" app:strokeColor="#ef4444" style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+    </LinearLayout>
+    <TextView android:textSize="11.0sp" android:textColor="#88ffffff" android:layout_gravity="center|bottom" android:background="#44000000" android:paddingLeft="16.0dp" android:paddingTop="8.0dp" android:paddingRight="16.0dp" android:paddingBottom="8.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="24.0dp" android:text="@string/label_drag_hint" android:paddingHorizontal="16.0dp" android:paddingVertical="8.0dp" />
+</FrameLayout>

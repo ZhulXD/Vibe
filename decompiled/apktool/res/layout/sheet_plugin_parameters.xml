@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:background="@drawable/bg_gamepad_sheet" android:padding="20.0dp" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:textSize="18.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_parameters_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/game_detail_plugin_parameters_title" />
+    <TextView android:textSize="12.0sp" android:textColor="@color/text_mut" android:id="@id/tv_parameters_empty" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12.0dp" android:text="@string/game_detail_plugin_parameters_empty" />
+    <LinearLayout android:orientation="vertical" android:id="@id/container_parameter_rows" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12.0dp" />
+    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18.0dp">
+        <Button android:textColor="@color/text_pri" android:id="@id/btn_cancel" android:background="@drawable/bg_btn_outline" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/action_cancel" android:layout_weight="1.0" android:textAllCaps="false" />
+        <Space android:layout_width="10.0dp" android:layout_height="1.0dp" />
+        <Button android:textColor="@android:color/white" android:id="@id/btn_save" android:background="@drawable/bg_btn_accent" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/action_save" android:layout_weight="1.0" android:textAllCaps="false" />
+    </LinearLayout>
+</LinearLayout>

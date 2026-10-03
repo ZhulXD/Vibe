@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView android:background="@color/bg" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/text_mut" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8.0dp" android:text="@string/settings_tab_plugins" android:letterSpacing="0.1" />
+        <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/text_mut" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4.0dp" android:layout_marginBottom="4.0dp" android:text="@string/settings_engine_plugins" android:letterSpacing="0.1" />
+        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:paddingTop="10.0dp" android:paddingBottom="10.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="10.0dp">
+            <TextView android:textSize="13.0sp" android:textColor="@color/text_pri" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/login_engine_vxace" android:layout_weight="1.0" />
+            <TextView android:textSize="11.0sp" android:id="@id/tv_vxace_status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="10.0dp" />
+            <Button android:textSize="11.0sp" android:textColor="@color/text_pri" android:id="@id/btn_vxace_install" android:background="@drawable/bg_btn_outline" android:paddingLeft="12.0dp" android:paddingTop="6.0dp" android:paddingRight="12.0dp" android:paddingBottom="6.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textAllCaps="false" android:paddingHorizontal="12.0dp" android:paddingVertical="6.0dp" />
+        </LinearLayout>
+        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:paddingTop="10.0dp" android:paddingBottom="10.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="10.0dp">
+            <TextView android:textSize="13.0sp" android:textColor="@color/text_pri" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/login_engine_renpy8" android:layout_weight="1.0" />
+            <TextView android:textSize="11.0sp" android:id="@id/tv_renpy8_status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="10.0dp" />
+            <Button android:textSize="11.0sp" android:textColor="@color/text_pri" android:id="@id/btn_renpy8_install" android:background="@drawable/bg_btn_outline" android:paddingLeft="12.0dp" android:paddingTop="6.0dp" android:paddingRight="12.0dp" android:paddingBottom="6.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textAllCaps="false" android:paddingHorizontal="12.0dp" android:paddingVertical="6.0dp" />
+        </LinearLayout>
+        <LinearLayout android:orientation="vertical" android:id="@id/ll_renpy7_cores" android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <LinearLayout android:orientation="vertical" android:id="@id/ll_godot_cores" android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:paddingTop="10.0dp" android:paddingBottom="10.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="10.0dp">
+            <TextView android:textSize="13.0sp" android:textColor="@color/text_pri" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/login_engine_kiri" android:layout_weight="1.0" />
+            <TextView android:textSize="11.0sp" android:textColor="@color/text_sec" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/plugin_engine_bundled" />
+        </LinearLayout>
+        <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/text_mut" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="22.0dp" android:layout_marginBottom="4.0dp" android:text="@string/settings_patch_section" android:letterSpacing="0.1" />
+        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:paddingTop="10.0dp" android:paddingBottom="10.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="10.0dp">
+            <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0">
+                <TextView android:textSize="13.0sp" android:textColor="@color/text_pri" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/settings_patch_title" />
+                <TextView android:textSize="11.0sp" android:textColor="@color/text_mut" android:id="@id/tv_patch_version" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" />
+            </LinearLayout>
+            <Button android:textSize="11.0sp" android:textColor="@color/text_pri" android:id="@id/btn_patch_update" android:background="@drawable/bg_btn_outline" android:paddingLeft="12.0dp" android:paddingTop="6.0dp" android:paddingRight="12.0dp" android:paddingBottom="6.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/settings_patch_check" android:textAllCaps="false" android:paddingHorizontal="12.0dp" android:paddingVertical="6.0dp" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

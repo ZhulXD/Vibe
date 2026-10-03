@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="horizontal" android:background="@drawable/bg_card" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginLeft="12.0dp" android:layout_marginTop="6.0dp" android:layout_marginRight="12.0dp" android:layout_marginBottom="6.0dp" android:layout_marginHorizontal="12.0dp" android:layout_marginVertical="6.0dp"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <FrameLayout android:background="@drawable/bg_splash_icon" android:layout_width="48.0dp" android:layout_height="48.0dp">
+        <TextView android:textSize="18.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:layout_gravity="center" android:id="@id/tv_slot_number" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="1" />
+    </FrameLayout>
+    <LinearLayout android:gravity="center_vertical" android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginStart="12.0dp">
+        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_slot_label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Slot 1" />
+        <TextView android:textSize="12.0sp" android:textColor="@color/text_sec" android:ellipsize="end" android:id="@id/tv_chapter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Chapter 1" android:maxLines="1" />
+        <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2.0dp">
+            <TextView android:textSize="10.0sp" android:textColor="@color/text_mut" android:id="@id/tv_playtime" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="2h 15m" android:layout_marginEnd="8.0dp" />
+            <TextView android:textSize="10.0sp" android:textColor="@color/text_mut" android:id="@id/tv_leader" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Hero" android:layout_marginEnd="8.0dp" />
+            <TextView android:textSize="10.0sp" android:textColor="@color/text_mut" android:id="@id/tv_size" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="45 KB" />
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout android:gravity="end|center" android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content">
+        <TextView android:textSize="10.0sp" android:textColor="@color/text_mut" android:id="@id/tv_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="6.0dp" android:text="2 giờ trước" />
+        <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <Button android:textSize="10.0sp" android:textColor="@color/accent" android:id="@id/btn_export" android:background="@drawable/bg_btn_outline" android:paddingLeft="10.0dp" android:paddingTop="4.0dp" android:paddingRight="10.0dp" android:paddingBottom="4.0dp" android:layout_width="wrap_content" android:layout_height="32.0dp" android:minWidth="0.0dp" android:text="@string/btn_download" android:textAllCaps="false" android:layout_marginEnd="6.0dp" android:paddingHorizontal="10.0dp" android:paddingVertical="4.0dp" />
+            <ImageButton android:id="@id/btn_delete" android:background="@drawable/bg_btn_icon_dark" android:padding="6.0dp" android:layout_width="32.0dp" android:layout_height="32.0dp" android:src="@drawable/ic_delete" android:tint="@color/danger" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

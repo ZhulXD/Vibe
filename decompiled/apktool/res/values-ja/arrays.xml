@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="bug_report_categories">
+        <item>不明なエラー</item>
+        <item>画面が真っ黒</item>
+        <item>フリーズ / 無反応</item>
+        <item>クラッシュ / 強制終了</item>
+        <item>セーブ / ロード不具合</item>
+        <item>テキスト欠落 / 文字化け</item>
+        <item>画像 / グラフィック不具合</item>
+        <item>音が出ない / 音声不具合</item>
+    </string-array>
+</resources>

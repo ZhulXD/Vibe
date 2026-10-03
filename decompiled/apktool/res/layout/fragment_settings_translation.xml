@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView android:background="@color/bg" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <Switch android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/switch_translation" android:paddingTop="13.0dp" android:paddingBottom="13.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/label_translation_realtime" android:paddingVertical="13.0dp" />
+        <LinearLayout android:orientation="vertical" android:id="@id/layout_trans_options" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/text_mut" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16.0dp" android:layout_marginBottom="8.0dp" android:text="@string/label_source_lang" android:letterSpacing="0.1" />
+            <Spinner android:id="@id/spinner_trans_source" android:background="@drawable/bg_input" android:padding="10.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
+            <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/text_mut" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16.0dp" android:layout_marginBottom="8.0dp" android:text="@string/label_target_lang" android:letterSpacing="0.1" />
+            <Spinner android:id="@id/spinner_trans_target" android:background="@drawable/bg_input" android:padding="10.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
+            <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/text_mut" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16.0dp" android:layout_marginBottom="8.0dp" android:text="@string/label_display_style" android:letterSpacing="0.1" />
+            <LinearLayout android:orientation="horizontal" android:id="@id/layout_style_picker" android:layout_width="match_parent" android:layout_height="wrap_content" />
+            <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/text_mut" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16.0dp" android:layout_marginBottom="8.0dp" android:text="@string/label_font" android:letterSpacing="0.1" />
+            <Spinner android:id="@id/spinner_trans_font" android:background="@drawable/bg_input" android:padding="10.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
+            <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/text_mut" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16.0dp" android:layout_marginBottom="8.0dp" android:text="@string/label_text_color" android:letterSpacing="0.1" />
+            <LinearLayout android:orientation="horizontal" android:id="@id/layout_color_picker" android:layout_width="match_parent" android:layout_height="wrap_content" />
+            <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/text_mut" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16.0dp" android:layout_marginBottom="6.0dp" android:text="@string/label_font_size" />
+            <TextView android:textSize="11.0sp" android:textColor="@color/text_sec" android:id="@id/tv_trans_size_label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="6.0dp" android:text="@string/label_px_suffix" />
+            <com.google.android.material.slider.Slider android:id="@id/slider_trans_size" android:layout_width="match_parent" android:layout_height="wrap_content" android:stepSize="1.0" android:valueFrom="10" android:valueTo="22" app:thumbColor="@color/accent" app:trackColorActive="@color/accent" />
+            <LinearLayout android:orientation="vertical" android:background="@drawable/bg_card" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14.0dp">
+                <TextView android:textSize="9.0sp" android:textColor="@color/text_mut" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="6.0dp" android:text="@string/label_preview_subtitle" android:letterSpacing="0.05" />
+                <FrameLayout android:background="#cc000000" android:paddingLeft="12.0dp" android:paddingTop="8.0dp" android:paddingRight="12.0dp" android:paddingBottom="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="12.0dp" android:paddingVertical="8.0dp">
+                    <TextView android:textSize="14.0sp" android:textColor="#ffffff" android:gravity="center" android:id="@id/tv_trans_preview" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/trans_preview_text" android:lineSpacingMultiplier="1.5" />
+                </FrameLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:background="@color/s1" android:paddingLeft="16.0dp" android:paddingTop="20.0dp" android:paddingRight="16.0dp" android:paddingBottom="24.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="16.0dp"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_dialog_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/trans_dialog_title" />
+    <TextView android:textSize="11.0sp" android:textColor="@color/text_mut" android:id="@id/tv_dialog_subtitle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4.0dp" android:layout_marginBottom="16.0dp" android:text="@string/hint_translation_settings" />
+    <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:paddingTop="10.0dp" android:paddingBottom="10.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="10.0dp">
+            <TextView android:textSize="13.0sp" android:textColor="@color/text_sec" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/trans_source_label" android:layout_weight="1.0" />
+            <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_dialog_source" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </LinearLayout>
+        <View android:background="@color/s2" android:layout_width="match_parent" android:layout_height="1.0dp" />
+        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:paddingTop="10.0dp" android:paddingBottom="10.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="10.0dp">
+            <TextView android:textSize="13.0sp" android:textColor="@color/text_sec" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/trans_target_label" android:layout_weight="1.0" />
+            <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_dialog_target" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </LinearLayout>
+        <View android:background="@color/s2" android:layout_width="match_parent" android:layout_height="1.0dp" />
+        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:paddingTop="10.0dp" android:paddingBottom="10.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="10.0dp">
+            <TextView android:textSize="13.0sp" android:textColor="@color/text_sec" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/trans_color_label" android:layout_weight="1.0" />
+            <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_dialog_color" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </LinearLayout>
+        <View android:background="@color/s2" android:layout_width="match_parent" android:layout_height="1.0dp" />
+        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:paddingTop="10.0dp" android:paddingBottom="10.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="10.0dp">
+            <TextView android:textSize="13.0sp" android:textColor="@color/text_sec" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/trans_font_label" android:layout_weight="1.0" />
+            <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_dialog_font" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16.0dp">
+        <Button android:textStyle="bold" android:textColor="@color/text_sec" android:id="@id/btn_dialog_cancel" android:background="@drawable/bg_btn_outline" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/dialog_cancel" android:layout_weight="1.0" android:textAllCaps="false" />
+        <Space android:layout_width="10.0dp" android:layout_height="1.0dp" />
+        <Button android:textStyle="bold" android:textColor="@android:color/white" android:id="@id/btn_dialog_start" android:background="@drawable/bg_btn_accent" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/trans_start" android:layout_weight="2.0" android:textAllCaps="false" />
+    </LinearLayout>
+</LinearLayout>

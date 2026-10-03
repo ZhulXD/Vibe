@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:compileSdkVersion="35" android:compileSdkVersionCodename="15" package="com.minhub.gamehub" platformBuildVersionCode="35" platformBuildVersionName="15">
+    <permission android:name="com.minhub.gamehub.permission.GAME_SESSION" android:protectionLevel="signature"/>
+    <uses-permission android:name="com.minhub.gamehub.permission.GAME_SESSION"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:maxSdkVersion="28" android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:maxSdkVersion="32" android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+    <uses-permission android:name="android.permission.USE_FINGERPRINT"/>
+    <permission android:name="com.minhub.gamehub.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" android:protectionLevel="signature"/>
+    <uses-permission android:name="com.minhub.gamehub.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"/>
+    <application android:allowBackup="false" android:appComponentFactory="androidx.core.app.CoreComponentFactory" android:enableOnBackInvokedCallback="true" android:extractNativeLibs="true" android:hardwareAccelerated="true" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:largeHeap="true" android:networkSecurityConfig="@xml/network_security_config" android:roundIcon="@mipmap/ic_launcher_round" android:supportsRtl="true" android:theme="@style/Theme.MinHub">
+        <activity android:exported="true" android:launchMode="singleTask" android:name="com.minhub.gamehub.hub.LoginActivity" android:screenOrientation="portrait" android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:host="patreon-callback" android:scheme="yunbierdika"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:host="h-game18.xyz" android:path="/patreon-callback.php" android:scheme="https"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:host="game" android:scheme="minhub"/>
+            </intent-filter>
+        </activity>
+        <activity android:exported="false" android:name="com.minhub.gamehub.hub.HubActivity" android:screenOrientation="portrait" android:windowSoftInputMode="adjustResize"/>
+        <activity android:exported="false" android:name="com.minhub.gamehub.hub.GameDetailActivity" android:screenOrientation="portrait"/>
+        <activity android:exported="false" android:name="com.minhub.gamehub.hub.ImageViewerActivity" android:screenOrientation="fullSensor" android:theme="@style/Theme.MinHub.Game"/>
+        <activity android:exported="false" android:name="com.minhub.gamehub.game.SplashGameActivity" android:screenOrientation="portrait" android:theme="@style/Theme.MinHub.Game"/>
+        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="false" android:hardwareAccelerated="true" android:name="com.minhub.gamehub.game.GameActivity" android:screenOrientation="sensorLandscape" android:theme="@style/Theme.MinHub.Game"/>
+        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="false" android:hardwareAccelerated="true" android:name="org.renpy.android.PythonSDLActivity" android:process=":renpy" android:screenOrientation="sensorLandscape" android:theme="@style/Theme.MinHub.Game"/>
+        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="false" android:hardwareAccelerated="true" android:name="org.renpy.android.PythonSDLActivityRenpy7" android:process=":renpy7" android:screenOrientation="sensorLandscape" android:theme="@style/Theme.MinHub.Game"/>
+        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="false" android:hardwareAccelerated="true" android:name="com.minhub.gamehub.game.VxAceGameActivity" android:process=":vxace" android:screenOrientation="sensorLandscape" android:theme="@style/Theme.MinHub.Game"/>
+        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="false" android:hardwareAccelerated="true" android:name="com.minhub.gamehub.game.KiriKiriGameActivity" android:process=":kirikiri" android:screenOrientation="sensorLandscape" android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:windowSoftInputMode="adjustPan"/>
+        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="false" android:hardwareAccelerated="true" android:launchMode="singleTask" android:name="com.minhub.gamehub.game.GodotGameActivity" android:process=":godot" android:screenOrientation="sensorLandscape" android:theme="@style/Theme.MinHub.Game"/>
+        <activity android:exported="false" android:name="com.minhub.gamehub.game.VxAceCheatActivity" android:screenOrientation="sensorLandscape" android:theme="@style/Theme.MinHub.Game.Overlay"/>
+        <activity android:exported="false" android:name="com.minhub.gamehub.hub.AddGameActivity" android:screenOrientation="portrait"/>
+        <activity android:configChanges="locale|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|density|layoutDirection|colorMode|fontScale" android:exported="false" android:name="com.minhub.gamehub.hub.KiriKiriInstallActivity" android:screenOrientation="portrait"/>
+        <activity android:exported="false" android:name="com.minhub.gamehub.hub.OnlineGameDetailActivity" android:screenOrientation="portrait"/>
+        <activity android:exported="false" android:name="com.minhub.gamehub.hub.OnlineDownloadsActivity" android:screenOrientation="portrait"/>
+        <activity android:exported="false" android:name="com.minhub.gamehub.hub.SettingsActivity" android:screenOrientation="portrait"/>
+        <activity android:exported="false" android:name="com.minhub.gamehub.hub.AppLockActivity" android:screenOrientation="portrait" android:windowSoftInputMode="adjustResize"/>
+        <activity android:exported="false" android:name="com.minhub.gamehub.hub.SetupAppLockActivity" android:screenOrientation="portrait" android:windowSoftInputMode="adjustResize"/>
+        <activity android:exported="false" android:name="com.minhub.gamehub.gamepad.ButtonCatalogActivity" android:screenOrientation="portrait"/>
+        <activity android:exported="false" android:name="com.minhub.gamehub.editor.ButtonEditorActivity" android:screenOrientation="sensorLandscape"/>
+        <activity android:exported="false" android:name="com.minhub.gamehub.keyboard.KeyboardActivity" android:screenOrientation="portrait"/>
+        <service android:exported="false" android:foregroundServiceType="dataSync" android:name="com.minhub.gamehub.hub.catalog.DownloadForegroundService"/>
+        <provider android:authorities="com.minhub.gamehub.fileprovider" android:exported="false" android:grantUriPermissions="true" android:name="androidx.core.content.FileProvider">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths"/>
+        </provider>
+        <meta-data android:name="org.godotengine.library.version" android:value="4.7.1.stable"/>
+        <activity android:exported="false" android:name="org.godotengine.godot.utils.ProcessPhoenix" android:process=":phoenix" android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
+        <uses-library android:name="androidx.window.extensions" android:required="false"/>
+        <uses-library android:name="androidx.window.sidecar" android:required="false"/>
+        <provider android:authorities="com.minhub.gamehub.androidx-startup" android:exported="false" android:name="androidx.startup.InitializationProvider">
+            <meta-data android:name="androidx.emoji2.text.EmojiCompatInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="androidx.lifecycle.ProcessLifecycleInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="androidx.profileinstaller.ProfileInstallerInitializer" android:value="androidx.startup"/>
+        </provider>
+        <receiver android:directBootAware="false" android:enabled="true" android:exported="true" android:name="androidx.profileinstaller.ProfileInstallReceiver" android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.SKIP_FILE"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION"/>
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

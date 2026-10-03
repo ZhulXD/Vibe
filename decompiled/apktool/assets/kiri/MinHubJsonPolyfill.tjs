@@ -1,0 +1,306 @@
+// [MinHub:json-polyfill-v1] pure-TJS replacement for Windows-only json.dll
+// json.dll (Plugins.link("json.dll")) cannot load on Android, so
+// Scripts.evalJSONStorage does not exist and courreges-engine games crash at
+// SystemAddon.tjs line 38. This file provides evalJSONString / evalJSON /
+// evalJSONStorage plus saveJSON / toJSONString stubs.
+// NOTE: encrypted *.json files (single-byte XOR, key = first_byte ^ 0x2F)
+// must be decoded to plain text BEFORE boot (MinHub patchJsonFiles does this).
+
+try { var __minhub_json_probe = Scripts.evalJSONStorage; }
+catch (__minhub_json_e)
+{
+
+class MinHubJsonParser
+{
+	var src;
+	var pos;
+	var len;
+
+	function MinHubJsonParser(s)
+	{
+		src = s;
+		pos = 0;
+		len = s.length;
+	}
+
+	function skipWS()
+	{
+		while (pos < len)
+		{
+			var c = #src[pos];
+			if (c == 0x20 || c == 0x09 || c == 0x0A || c == 0x0D) { pos++; continue; }
+			if (c == 0x2F && pos + 1 < len)
+			{
+				var n = #src[pos + 1];
+				if (n == 0x2F)
+				{
+					pos += 2;
+					while (pos < len && #src[pos] != 0x0A) pos++;
+					continue;
+				}
+				else if (n == 0x2A)
+				{
+					pos += 2;
+					while (pos + 1 < len && !(#src[pos] == 0x2A && #src[pos + 1] == 0x2F)) pos++;
+					pos += 2;
+					continue;
+				}
+			}
+			break;
+		}
+	}
+
+	function matchWord(w)
+	{
+		var wl = w.length;
+		if (pos + wl > len) return false;
+		for (var k = 0; k < wl; k++)
+		{
+			if (#src[pos + k] != #w[k]) return false;
+		}
+		var after = pos + wl;
+		if (after < len)
+		{
+			var ac = #src[after];
+			if ((ac >= 0x41 && ac <= 0x5A) || (ac >= 0x61 && ac <= 0x7A) ||
+				(ac >= 0x30 && ac <= 0x39) || ac == 0x5F) return false;
+		}
+		pos += wl;
+		return true;
+	}
+
+	function parseTop()
+	{
+		var v = parseValue();
+		skipWS();
+		return v;
+	}
+
+	function parseValue()
+	{
+		skipWS();
+		if (pos >= len) return void;
+		var c = #src[pos];
+		if (c == 0x7B) return parseObject();
+		if (c == 0x5B) return parseArray();
+		if (c == 0x22) return parseQuoted(0x22);
+		if (c == 0x27) return parseQuoted(0x27);
+		if (c == 0x24) return parseDollar();
+		if ((c >= 0x30 && c <= 0x39) || c == 0x2D || c == 0x2B) return parseNumber();
+		if (c == 0x74) { if (matchWord("true")) return true; }
+		else if (c == 0x66) { if (matchWord("false")) return false; }
+		else if (c == 0x6E) { if (matchWord("null")) return void; }
+		else if (c == 0x75) { if (matchWord("undefined")) return void; }
+		else if (c == 0x76) { if (matchWord("void")) return void; }
+		throw new global.Exception("MinHubJSON: unexpected char");
+	}
+
+	function parseQuoted(q)
+	{
+		pos++;
+		var s = "";
+		while (pos < len)
+		{
+			var c = #src[pos];
+			if (c == q) { pos++; return s; }
+			if (c == 0x5C)
+			{
+				pos++;
+				if (pos >= len) break;
+				var e = #src[pos];
+				if (e == 0x22) s += "\"";
+				else if (e == 0x27) s += "'";
+				else if (e == 0x5C) s += "\\";
+				else if (e == 0x2F) s += "/";
+				else if (e == 0x62) s += "\b";
+				else if (e == 0x66) s += "\f";
+				else if (e == 0x6E) s += "\n";
+				else if (e == 0x72) s += "\r";
+				else if (e == 0x74) s += "\t";
+				else if (e == 0x75)
+				{
+					var hv = 0;
+					for (var k = 0; k < 4; k++)
+					{
+						pos++;
+						if (pos >= len) break;
+						var hc = #src[pos];
+						hv *= 16;
+						if (hc >= 0x30 && hc <= 0x39) hv += hc - 0x30;
+						else if (hc >= 0x41 && hc <= 0x46) hv += hc - 0x41 + 10;
+						else if (hc >= 0x61 && hc <= 0x66) hv += hc - 0x61 + 10;
+					}
+					s += $(hv);
+				}
+				else
+				{
+					s += src[pos];
+				}
+				pos++;
+				continue;
+			}
+			s += src[pos];
+			pos++;
+		}
+		throw new global.Exception("MinHubJSON: unterminated string");
+	}
+
+	function parseDigits()
+	{
+		var t = "";
+		while (pos < len)
+		{
+			var c = #src[pos];
+			if ((c >= 0x30 && c <= 0x39) || c == 0x2E ||
+				c == 0x65 || c == 0x45 || c == 0x2B || c == 0x2D)
+			{
+				t += src[pos];
+				pos++;
+			}
+			else break;
+		}
+		return t;
+	}
+
+	function parseNumber()
+	{
+		var t = parseDigits();
+		var isReal = false;
+		for (var i = 0; i < t.length; i++)
+		{
+			var c = #t[i];
+			if (c == 0x2E || c == 0x65 || c == 0x45) { isReal = true; break; }
+		}
+		if (isReal) return real(t);
+		return int(t);
+	}
+
+	function parseDollar()
+	{
+		pos++;
+		var v = 0;
+		while (pos < len)
+		{
+			var c = #src[pos];
+			var d = -1;
+			if (c >= 0x30 && c <= 0x39) d = c - 0x30;
+			else if (c >= 0x41 && c <= 0x46) d = c - 0x41 + 10;
+			else if (c >= 0x61 && c <= 0x66) d = c - 0x61 + 10;
+			else break;
+			v = v * 16 + d;
+			pos++;
+		}
+		return v;
+	}
+
+	function parseArray()
+	{
+		pos++;
+		var a = [];
+		skipWS();
+		if (pos < len && #src[pos] == 0x5D) { pos++; return a; }
+		while (pos < len)
+		{
+			skipWS();
+			if (pos < len && #src[pos] == 0x5D) { pos++; break; }
+			var v = parseValue();
+			a.add(v);
+			skipWS();
+			if (pos >= len) break;
+			var c = #src[pos];
+			if (c == 0x2C) { pos++; continue; }
+			if (c == 0x5D) { pos++; break; }
+			break;
+		}
+		return a;
+	}
+
+	function parseBareKey()
+	{
+		var k = "";
+		while (pos < len)
+		{
+			var c = #src[pos];
+			if ((c >= 0x41 && c <= 0x5A) || (c >= 0x61 && c <= 0x7A) ||
+				(c >= 0x30 && c <= 0x39) || c == 0x5F || c >= 0x80)
+			{
+				k += src[pos];
+				pos++;
+			}
+			else break;
+		}
+		return k;
+	}
+
+	function parseObject()
+	{
+		pos++;
+		var d = %[];
+		skipWS();
+		if (pos < len && #src[pos] == 0x7D) { pos++; return d; }
+		while (pos < len)
+		{
+			skipWS();
+			if (pos < len && #src[pos] == 0x7D) { pos++; break; }
+			var key;
+			var qc = #src[pos];
+			if (qc == 0x22 || qc == 0x27) key = parseQuoted(qc);
+			else key = parseBareKey();
+			skipWS();
+			if (pos < len && #src[pos] == 0x3A) pos++;
+			var v = parseValue();
+			d[key] = v;
+			skipWS();
+			if (pos >= len) break;
+			var c = #src[pos];
+			if (c == 0x2C) { pos++; continue; }
+			if (c == 0x7D) { pos++; break; }
+			break;
+		}
+		return d;
+	}
+}
+
+global.Scripts.evalJSONString = function(s)
+{
+	var p = new MinHubJsonParser(s);
+	return p.parseTop();
+} incontextof null;
+
+global.Scripts.evalJSON = global.Scripts.evalJSONString;
+
+global.Scripts.evalJSONStorage = function(filename)
+{
+	try
+	{
+		var lines = [].load(filename);
+		if (lines === void || lines.count == 0) return void;
+		var text = "";
+		for (var i = 0; i < lines.count; i++)
+			text += lines[i] + "\n";
+		try
+		{
+			return global.Scripts.evalJSONString(text);
+		}
+		catch (e2)
+		{
+			return void;
+		}
+	}
+	catch (e)
+	{
+		return void;
+	}
+} incontextof null;
+
+global.Scripts.toJSONString = function(o)
+{
+	return "";
+} incontextof null;
+
+global.Scripts.saveJSON = function(filename, obj)
+{
+	return false;
+} incontextof null;
+
+}

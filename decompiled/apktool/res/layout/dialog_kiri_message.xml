@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:background="@drawable/bg_dialog_account" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:orientation="vertical" android:paddingTop="24.0dp" android:paddingBottom="20.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="24.0dp" android:paddingEnd="24.0dp">
+        <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_kiri_dialog_title" android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <TextView android:textSize="13.0sp" android:textColor="@color/text_sec" android:id="@id/tv_kiri_dialog_message" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" android:lineSpacingMultiplier="1.4" />
+        <FrameLayout android:id="@id/kiri_dialog_input" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" />
+    </LinearLayout>
+    <View android:background="@color/s4" android:layout_width="match_parent" android:layout_height="1.0dp" />
+    <LinearLayout android:gravity="end" android:orientation="horizontal" android:id="@id/kiri_dialog_buttons" android:paddingTop="14.0dp" android:paddingBottom="14.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="16.0dp" android:paddingEnd="16.0dp" />
+</LinearLayout>

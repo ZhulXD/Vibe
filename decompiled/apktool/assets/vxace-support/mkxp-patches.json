@@ -1,0 +1,36 @@
+{
+  "rpgm": [
+    {
+      "key": "text.to_s.clone",
+      "value": "text.to_s.dup"
+    },
+    {
+      "key": "File.open(make_filename(index), \"wb\") do |file|",
+      "value": "Dir.mkdir(\"Save\") unless FileTest.directory?(\"Save\"); File.open(make_filename(index), \"wb\") do |file|"
+    },
+    {
+      "key": "Win32API.new('user32'  , 'CreateWindowEx'           , 'ippiiiiiiiii', 'i')",
+      "value": "Win32API.new('user32'  , 'CreateWindowEx'           , 'ipiiiiiiii', 'i')"
+    },
+    {
+      "key": "    script.gsub!(/hogeTexts\\.push\\(\"([^\"]*)\\)$/) {|m| m.sub(/\\)$/, '\\\")')}\\r\\n    eval(script)\\r\\n  end\\r\\nend",
+      "value": "    script.gsub!(/hogeTexts\\.push\\(\"([^\"\\n]*)\"\\n([^\"]*)\"\\)/) {|m| m.gsub(/\"(?=\\n)/, '')}\\r\\n    script.gsub!(/hogeTexts\\.push\\(\"([^\"]*)\\)$/) {|m| m.sub(/\\)$/, '\\\")')}\\r\\n    eval(script)\\r\\n  end\\r\\nend"
+    },
+    {
+      "key": "      character = get_character($mes_id)\\r\\n      \\r\\n      if defined?(character.sv) and $svhuki",
+      "value": "      character = get_character($mes_id)\\r\\n      return [MINAS_TWE_X_POS, get_tale_pos_normal_updown] if character.nil?\\r\\n      \\r\\n      if defined?(character.sv) and $svhuki"
+    },
+    {
+      "key": "@@press_count",
+      "value": "WDTK_PRESS_COUNT"
+    },
+    {
+      "key": "  alias etypes_expansion etypes unless $!\\r\\n  def etypes\\r\\n    etypes_expansion + SceneEquipNextType::SlotName\\r\\n  end",
+      "value": "  unless method_defined?(:etypes)\\r\\n    attr_accessor :etypes\\r\\n  end\\r\\n  unless method_defined?(:etypes_expansion)\\r\\n    alias etypes_expansion etypes\\r\\n  end\\r\\n  def etypes\\r\\n    etypes_expansion + SceneEquipNextType::SlotName\\r\\n  end"
+    },
+    {
+      "key": "$game_variables[33] = Tidak punya pengalaman.\"",
+      "value": "$game_variables[33] = \"Tidak punya pengalaman.\""
+    }
+  ]
+}

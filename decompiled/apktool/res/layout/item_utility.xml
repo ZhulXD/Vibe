@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="6.0dp"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginEnd="12.0dp">
+        <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_util_label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="2.0dp" />
+        <TextView android:textSize="10.0sp" android:textColor="@color/text_mut" android:id="@id/tv_util_desc" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </LinearLayout>
+    <com.google.android.material.switchmaterial.SwitchMaterial android:id="@id/switch_util" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="false" />
+</LinearLayout>

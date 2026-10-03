@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:gravity="center_vertical" android:layout_gravity="center|top" android:orientation="horizontal" android:id="@id/layout_arrange_toolbar" android:background="@drawable/bg_game_menu" android:paddingLeft="10.0dp" android:paddingTop="8.0dp" android:paddingRight="10.0dp" android:paddingBottom="8.0dp" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16.0dp" android:elevation="14.0dp" android:paddingHorizontal="10.0dp" android:paddingVertical="8.0dp"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/accent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/arrange_mode_title" android:layout_marginEnd="10.0dp" />
+    <Button android:textSize="11.0sp" android:textColor="@color/text_pri" android:id="@id/btn_arrange_cancel" android:background="@drawable/bg_btn_outline" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/arrange_close" android:layout_marginEnd="6.0dp" />
+    <Button android:textSize="11.0sp" android:textColor="#ffffffff" android:id="@id/btn_arrange_save" android:background="@drawable/bg_btn_accent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/arrange_save" />
+</LinearLayout>

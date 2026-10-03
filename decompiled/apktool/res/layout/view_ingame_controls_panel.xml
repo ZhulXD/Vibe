@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:background="#aa000000" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:layout_gravity="center|top" android:orientation="vertical" android:background="@drawable/bg_game_menu" android:padding="10.0dp" android:layout_width="240.0dp" android:layout_height="wrap_content" android:layout_marginTop="40.0dp" android:elevation="18.0dp">
+        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/accent" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/button_picker_title" android:layout_weight="1.0" />
+            <TextView android:textSize="18.0sp" android:textColor="@color/text_sec" android:gravity="center" android:id="@id/btn_close_controls" android:layout_width="28.0dp" android:layout_height="28.0dp" android:text="×" />
+        </LinearLayout>
+        <TextView android:textSize="10.0sp" android:textColor="@color/text_mut" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4.0dp" android:layout_marginBottom="10.0dp" android:text="@string/button_picker_tip" />
+        <ScrollView android:layout_width="match_parent" android:layout_height="220.0dp" android:overScrollMode="never">
+            <LinearLayout android:orientation="vertical" android:id="@id/layout_controls_items" android:layout_width="match_parent" android:layout_height="wrap_content" />
+        </ScrollView>
+        <Button android:textSize="12.0sp" android:textStyle="bold" android:textColor="#ffffffff" android:id="@id/btn_done_controls" android:background="@drawable/bg_btn_accent" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10.0dp" android:text="@string/button_picker_done" />
+    </LinearLayout>
+</FrameLayout>

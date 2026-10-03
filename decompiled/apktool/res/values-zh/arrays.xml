@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="bug_report_categories">
+        <item>未知错误</item>
+        <item>黑屏</item>
+        <item>卡死 / 无响应</item>
+        <item>闪退 / 自动退出</item>
+        <item>存档 / 读取错误</item>
+        <item>文字缺失 / 乱码</item>
+        <item>图像 / 画面错误</item>
+        <item>没有声音 / 音频错误</item>
+    </string-array>
+</resources>

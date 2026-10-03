@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="bug_report_categories">
+        <item>Unknown error</item>
+        <item>Black screen</item>
+        <item>Freeze / not responding</item>
+        <item>Crash / app closes</item>
+        <item>Save / load broken</item>
+        <item>Text missing / garbled</item>
+        <item>Image / graphics broken</item>
+        <item>No sound / audio issue</item>
+    </string-array>
+</resources>

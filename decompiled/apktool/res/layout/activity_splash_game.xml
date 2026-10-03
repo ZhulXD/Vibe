@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:id="@id/root" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:gravity="center" android:layout_gravity="center" android:orientation="vertical" android:padding="32.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content">
+        <FrameLayout android:background="@drawable/bg_splash_icon" android:layout_width="76.0dp" android:layout_height="76.0dp" android:layout_marginBottom="18.0dp">
+            <ImageView android:layout_gravity="center" android:id="@id/img_splash_icon" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/ic_play" android:scaleType="centerInside" android:tint="#ccffffff" />
+        </FrameLayout>
+        <TextView android:textSize="26.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:gravity="center" android:id="@id/tv_game_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="6.0dp" />
+        <ProgressBar android:id="@id/progress_bar" android:layout_width="180.0dp" android:layout_height="3.0dp" android:layout_marginTop="52.0dp" android:layout_marginBottom="10.0dp" android:max="100" android:progressTint="@android:color/white" android:progressBackgroundTint="#1affffff" style="?android:progressBarStyleHorizontal" />
+        <TextView android:textSize="10.0sp" android:textColor="#4dffffff" android:id="@id/tv_percent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="LOADING 0%" android:letterSpacing="0.15" />
+    </LinearLayout>
+    <LinearLayout android:gravity="center_vertical" android:layout_gravity="center|bottom" android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="24.0dp" android:alpha="0.28">
+        <ImageView android:layout_width="13.0dp" android:layout_height="13.0dp" android:src="@drawable/ic_launcher_foreground" android:layout_marginEnd="6.0dp" />
+        <TextView android:textSize="11.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:id="@id/tv_powered" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Powered by MinHub" />
+    </LinearLayout>
+</FrameLayout>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:gravity="center_horizontal" android:orientation="vertical" android:background="@drawable/bg_dialog_account" android:paddingTop="28.0dp" android:paddingBottom="18.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="24.0dp" android:paddingEnd="24.0dp"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:textSize="24.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:gravity="center" android:id="@id/tv_patch_badge" android:layout_width="56.0dp" android:layout_height="56.0dp" android:layout_marginBottom="14.0dp" />
+    <TextView android:textSize="10.0sp" android:textColor="@color/accent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="6.0dp" android:text="@string/settings_patch_section" android:letterSpacing="0.15" />
+    <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_patch_dialog_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="8.0dp" />
+    <TextView android:textSize="13.0sp" android:textColor="@color/text_sec" android:gravity="center" android:id="@id/tv_patch_dialog_message" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="20.0dp" android:lineSpacingMultiplier="1.4" />
+    <Button android:textSize="14.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:id="@id/btn_patch_dialog_ok" android:background="@drawable/bg_btn_accent" android:layout_width="match_parent" android:layout_height="46.0dp" android:text="@string/ok" android:textAllCaps="false" />
+</LinearLayout>

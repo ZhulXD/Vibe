@@ -1,0 +1,29 @@
+.class public abstract LV1/y0;
+.super Lkotlin/coroutines/AbstractCoroutineContextElement;
+.source "r8-map-id-c6cf1983ffca914c12120f7cf25210053c773eeac8162410aa5a458fd7588401"
+
+
+# static fields
+.field public static final b:LV1/x0;
+
+
+# direct methods
+.method static constructor <clinit>()V
+    .locals 1
+
+    .line 1
+    new-instance v0, LV1/x0;
+
+    .line 2
+    .line 3
+    invoke-direct {v0}, Ljava/lang/Object;-><init>()V
+
+    .line 4
+    .line 5
+    .line 6
+    sput-object v0, LV1/y0;->b:LV1/x0;
+
+    .line 7
+    .line 8
+    return-void
+.end method

@@ -1,0 +1,134 @@
+package androidx.core.location;
+
+import android.location.GnssStatus;
+import android.os.Build;
+import androidx.core.util.Preconditions;
+
+/* JADX INFO: compiled from: r8-map-id-c6cf1983ffca914c12120f7cf25210053c773eeac8162410aa5a458fd7588401 */
+/* JADX INFO: loaded from: classes.dex */
+class GnssStatusWrapper extends GnssStatusCompat {
+    private final GnssStatus mWrapped;
+
+    /* JADX INFO: compiled from: r8-map-id-c6cf1983ffca914c12120f7cf25210053c773eeac8162410aa5a458fd7588401 */
+    public static class Api26Impl {
+        private Api26Impl() {
+        }
+
+        public static float getCarrierFrequencyHz(GnssStatus gnssStatus, int i3) {
+            return gnssStatus.getCarrierFrequencyHz(i3);
+        }
+
+        public static boolean hasCarrierFrequencyHz(GnssStatus gnssStatus, int i3) {
+            return gnssStatus.hasCarrierFrequencyHz(i3);
+        }
+    }
+
+    /* JADX INFO: compiled from: r8-map-id-c6cf1983ffca914c12120f7cf25210053c773eeac8162410aa5a458fd7588401 */
+    public static class Api30Impl {
+        private Api30Impl() {
+        }
+
+        public static float getBasebandCn0DbHz(GnssStatus gnssStatus, int i3) {
+            return gnssStatus.getBasebandCn0DbHz(i3);
+        }
+
+        public static boolean hasBasebandCn0DbHz(GnssStatus gnssStatus, int i3) {
+            return gnssStatus.hasBasebandCn0DbHz(i3);
+        }
+    }
+
+    public GnssStatusWrapper(Object obj) {
+        this.mWrapped = (GnssStatus) Preconditions.checkNotNull((GnssStatus) obj);
+    }
+
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof GnssStatusWrapper) {
+            return this.mWrapped.equals(((GnssStatusWrapper) obj).mWrapped);
+        }
+        return false;
+    }
+
+    @Override // androidx.core.location.GnssStatusCompat
+    public float getAzimuthDegrees(int i3) {
+        return this.mWrapped.getAzimuthDegrees(i3);
+    }
+
+    @Override // androidx.core.location.GnssStatusCompat
+    public float getBasebandCn0DbHz(int i3) {
+        if (Build.VERSION.SDK_INT >= 30) {
+            return Api30Impl.getBasebandCn0DbHz(this.mWrapped, i3);
+        }
+        throw new UnsupportedOperationException();
+    }
+
+    @Override // androidx.core.location.GnssStatusCompat
+    public float getCarrierFrequencyHz(int i3) {
+        if (Build.VERSION.SDK_INT >= 26) {
+            return Api26Impl.getCarrierFrequencyHz(this.mWrapped, i3);
+        }
+        throw new UnsupportedOperationException();
+    }
+
+    @Override // androidx.core.location.GnssStatusCompat
+    public float getCn0DbHz(int i3) {
+        return this.mWrapped.getCn0DbHz(i3);
+    }
+
+    @Override // androidx.core.location.GnssStatusCompat
+    public int getConstellationType(int i3) {
+        return this.mWrapped.getConstellationType(i3);
+    }
+
+    @Override // androidx.core.location.GnssStatusCompat
+    public float getElevationDegrees(int i3) {
+        return this.mWrapped.getElevationDegrees(i3);
+    }
+
+    @Override // androidx.core.location.GnssStatusCompat
+    public int getSatelliteCount() {
+        return this.mWrapped.getSatelliteCount();
+    }
+
+    @Override // androidx.core.location.GnssStatusCompat
+    public int getSvid(int i3) {
+        return this.mWrapped.getSvid(i3);
+    }
+
+    @Override // androidx.core.location.GnssStatusCompat
+    public boolean hasAlmanacData(int i3) {
+        return this.mWrapped.hasAlmanacData(i3);
+    }
+
+    @Override // androidx.core.location.GnssStatusCompat
+    public boolean hasBasebandCn0DbHz(int i3) {
+        if (Build.VERSION.SDK_INT >= 30) {
+            return Api30Impl.hasBasebandCn0DbHz(this.mWrapped, i3);
+        }
+        return false;
+    }
+
+    @Override // androidx.core.location.GnssStatusCompat
+    public boolean hasCarrierFrequencyHz(int i3) {
+        if (Build.VERSION.SDK_INT >= 26) {
+            return Api26Impl.hasCarrierFrequencyHz(this.mWrapped, i3);
+        }
+        return false;
+    }
+
+    @Override // androidx.core.location.GnssStatusCompat
+    public boolean hasEphemerisData(int i3) {
+        return this.mWrapped.hasEphemerisData(i3);
+    }
+
+    public int hashCode() {
+        return this.mWrapped.hashCode();
+    }
+
+    @Override // androidx.core.location.GnssStatusCompat
+    public boolean usedInFix(int i3) {
+        return this.mWrapped.usedInFix(i3);
+    }
+}

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:background="@color/bg" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <FrameLayout android:id="@id/hero_frame" android:layout_width="match_parent" android:layout_height="188.0dp">
+        <View android:id="@id/view_hero" android:layout_width="match_parent" android:layout_height="match_parent" />
+        <View android:background="@drawable/fade_to_bg" android:layout_width="match_parent" android:layout_height="match_parent" />
+        <ImageButton android:layout_gravity="start|top" android:id="@id/btn_back" android:background="@drawable/bg_btn_icon_dark" android:padding="6.0dp" android:layout_width="34.0dp" android:layout_height="34.0dp" android:layout_margin="12.0dp" android:src="@drawable/ic_back" android:tint="@android:color/white" />
+        <TextView android:textSize="16.0sp" android:textColor="@color/warn" android:gravity="center" android:layout_gravity="end|top" android:id="@id/tv_fav" android:background="@drawable/bg_btn_icon_dark" android:layout_width="34.0dp" android:layout_height="34.0dp" android:layout_margin="12.0dp" android:text="@string/label_favorite_empty" />
+    </FrameLayout>
+    <LinearLayout android:gravity="top" android:orientation="horizontal" android:paddingLeft="16.0dp" android:paddingRight="16.0dp" android:paddingBottom="10.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="16.0dp">
+        <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0">
+            <TextView android:textSize="17.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="6.0dp" />
+            <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
+                <TextView android:textSize="9.0sp" android:textStyle="bold" android:id="@id/tv_engine" android:background="@drawable/bg_badge_mv" android:paddingLeft="7.0dp" android:paddingTop="2.0dp" android:paddingRight="7.0dp" android:paddingBottom="2.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="6.0dp" android:paddingHorizontal="7.0dp" android:paddingVertical="2.0dp" />
+                <TextView android:textSize="10.0sp" android:textColor="@color/text_mut" android:id="@id/tv_version" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </LinearLayout>
+        </LinearLayout>
+        <Button android:textSize="14.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:id="@id/btn_play" android:background="@drawable/bg_btn_accent" android:paddingLeft="18.0dp" android:paddingTop="10.0dp" android:paddingRight="18.0dp" android:paddingBottom="10.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/game_detail_play" android:textAllCaps="false" android:paddingHorizontal="18.0dp" android:paddingVertical="10.0dp" />
+    </LinearLayout>
+    <HorizontalScrollView android:id="@id/layout_renderer_scroll" android:paddingLeft="16.0dp" android:paddingRight="16.0dp" android:paddingBottom="8.0dp" android:visibility="gone" android:scrollbars="none" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="16.0dp">
+        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/render_mode_row" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <TextView android:textSize="9.0sp" android:textColor="@color/text_mut" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_renderer_colon" android:layout_marginEnd="6.0dp" android:letterSpacing="0.05" />
+        </LinearLayout>
+    </HorizontalScrollView>
+    <LinearLayout android:orientation="horizontal" android:paddingLeft="16.0dp" android:paddingRight="16.0dp" android:paddingBottom="10.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="16.0dp">
+        <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0">
+            <TextView android:textSize="9.0sp" android:textColor="@color/text_mut" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_playtime" android:letterSpacing="0.06" />
+            <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_playtime" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </LinearLayout>
+        <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0">
+            <TextView android:textSize="9.0sp" android:textColor="@color/text_mut" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_last_played" android:letterSpacing="0.06" />
+            <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_last_played" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </LinearLayout>
+        <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0">
+            <TextView android:textSize="9.0sp" android:textColor="@color/text_mut" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_saves_short" android:letterSpacing="0.06" />
+            <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_saves" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </LinearLayout>
+    </LinearLayout>
+    <com.google.android.material.tabs.TabLayout android:id="@id/tab_layout" android:background="@color/s1" android:layout_width="match_parent" android:layout_height="wrap_content" app:tabIndicatorColor="@color/accent" app:tabMode="fixed" app:tabSelectedTextColor="@color/accent" app:tabTextColor="@color/text_mut" />
+    <FrameLayout android:id="@id/container_tabs" android:layout_width="match_parent" android:layout_height="0.0dp" android:layout_weight="1.0">
+        <ScrollView android:id="@id/content_info" android:layout_width="match_parent" android:layout_height="match_parent">
+            <LinearLayout android:orientation="vertical" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:textSize="13.0sp" android:textColor="@color/text_sec" android:id="@id/tv_desc" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="20.0dp" android:lineSpacingMultiplier="1.75" />
+                <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:paddingTop="11.0dp" android:paddingBottom="11.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="11.0dp">
+                        <TextView android:textSize="13.0sp" android:textColor="@color/text_mut" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/label_engine" android:layout_weight="1.0" />
+                        <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_info_engine" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                    </LinearLayout>
+                    <View android:background="@color/s2" android:layout_width="match_parent" android:layout_height="1.0dp" />
+                    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:paddingTop="11.0dp" android:paddingBottom="11.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="11.0dp">
+                        <TextView android:textSize="13.0sp" android:textColor="@color/text_mut" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/label_version" android:layout_weight="1.0" />
+                        <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_info_version" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                    </LinearLayout>
+                    <View android:background="@color/s2" android:layout_width="match_parent" android:layout_height="1.0dp" />
+                    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:paddingTop="11.0dp" android:paddingBottom="11.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="11.0dp">
+                        <TextView android:textSize="13.0sp" android:textColor="@color/text_mut" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/label_size" android:layout_weight="1.0" />
+                        <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_info_size" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                    </LinearLayout>
+                    <View android:background="@color/s2" android:layout_width="match_parent" android:layout_height="1.0dp" />
+                    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/row_info_renderer" android:paddingTop="11.0dp" android:paddingBottom="11.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="11.0dp">
+                        <TextView android:textSize="13.0sp" android:textColor="@color/text_mut" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/label_renderer" android:layout_weight="1.0" />
+                        <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_info_renderer" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                    </LinearLayout>
+                    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/row_info_orientation" android:background="?selectableItemBackground" android:paddingTop="11.0dp" android:paddingBottom="11.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="11.0dp">
+                        <TextView android:textSize="13.0sp" android:textColor="@color/text_mut" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/label_screen_orientation" android:layout_weight="1.0" />
+                        <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/tv_info_orientation" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                    </LinearLayout>
+                </LinearLayout>
+                <LinearLayout android:orientation="vertical" android:id="@id/layout_translation_section" android:background="@drawable/bg_card" android:padding="14.0dp" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18.0dp">
+                    <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/game_detail_translation_section_title" />
+                    <TextView android:textSize="12.0sp" android:textColor="@color/text_sec" android:id="@id/tv_translation_status" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6.0dp" />
+                    <TextView android:textSize="11.0sp" android:textColor="@color/text_mut" android:id="@id/tv_translation_available" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" />
+                    <Spinner android:id="@id/spinner_translation_package" android:background="@drawable/bg_input" android:paddingLeft="10.0dp" android:paddingTop="8.0dp" android:paddingRight="10.0dp" android:paddingBottom="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10.0dp" android:paddingHorizontal="10.0dp" android:paddingVertical="8.0dp" />
+                    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12.0dp">
+                        <Button android:textSize="12.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/btn_translation_install" android:background="@drawable/bg_btn_outline" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/game_detail_translation_install" android:layout_weight="1.0" android:textAllCaps="false" />
+                        <Space android:layout_width="10.0dp" android:layout_height="1.0dp" />
+                        <Button android:textSize="12.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:id="@id/btn_translation_restore" android:background="@drawable/bg_btn_outline" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/game_detail_translation_restore" android:layout_weight="1.0" android:textAllCaps="false" />
+                    </LinearLayout>
+                </LinearLayout>
+                <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16.0dp">
+                    <Button android:textSize="12.0sp" android:textStyle="bold" android:textColor="@color/text_sec" android:id="@id/btn_uninstall" android:background="@drawable/bg_btn_outline" android:padding="11.0dp" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/game_detail_uninstall" android:layout_weight="1.0" android:textAllCaps="false" />
+                    <Space android:layout_width="10.0dp" android:layout_height="1.0dp" />
+                    <Button android:textSize="12.0sp" android:textStyle="bold" android:textColor="@color/text_sec" android:id="@id/btn_update" android:background="@drawable/bg_btn_outline" android:padding="11.0dp" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/game_detail_update" android:layout_weight="1.0" android:textAllCaps="false" />
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
+        <LinearLayout android:orientation="vertical" android:id="@id/content_saves" android:visibility="gone" android:layout_width="match_parent" android:layout_height="match_parent">
+            <LinearLayout android:orientation="horizontal" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/game_detail_save_list" android:layout_weight="1.0" />
+                <Button android:textSize="11.0sp" android:textColor="@color/accent" android:id="@id/btn_import_save" android:background="@drawable/bg_btn_outline" android:paddingLeft="12.0dp" android:paddingTop="6.0dp" android:paddingRight="12.0dp" android:paddingBottom="6.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/game_detail_import_save" android:textAllCaps="false" android:paddingHorizontal="12.0dp" android:paddingVertical="6.0dp" />
+            </LinearLayout>
+            <TextView android:textSize="13.0sp" android:textColor="@color/text_mut" android:gravity="center" android:id="@id/tv_no_saves" android:padding="40.0dp" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/game_detail_no_saves" />
+            <androidx.recyclerview.widget.RecyclerView android:id="@id/rv_saves" android:paddingTop="6.0dp" android:paddingBottom="6.0dp" android:clipToPadding="false" android:layout_width="match_parent" android:layout_height="match_parent" android:paddingVertical="6.0dp" />
+        </LinearLayout>
+        <androidx.core.widget.NestedScrollView android:id="@id/content_plugins" android:visibility="gone" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true">
+            <LinearLayout android:orientation="vertical" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:textSize="12.0sp" android:textColor="@color/text_mut" android:id="@id/tv_plugins_hint" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" />
+                <Button android:enabled="false" android:textSize="12.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:id="@id/btn_save_plugins" android:background="@drawable/bg_btn_accent" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" android:text="@string/game_detail_save_plugins" android:textAllCaps="false" />
+                <Button android:textSize="12.0sp" android:textColor="@color/text_pri" android:id="@id/btn_add_plugin" android:background="@drawable/bg_btn_outline" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" android:text="@string/game_detail_add_plugin" android:textAllCaps="false" />
+                <TextView android:textSize="13.0sp" android:textColor="@color/text_mut" android:gravity="center" android:id="@id/tv_plugins_empty" android:paddingTop="28.0dp" android:paddingBottom="28.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/game_detail_no_plugins" android:paddingVertical="28.0dp" />
+                <androidx.recyclerview.widget.RecyclerView android:id="@id/rv_plugins_manager" android:visibility="gone" android:clipToPadding="false" android:layout_width="match_parent" android:layout_height="wrap_content" android:nestedScrollingEnabled="false" />
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </FrameLayout>
+</LinearLayout>

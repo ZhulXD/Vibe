@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="bug_report_categories">
+        <item>Kesalahan tidak diketahui</item>
+        <item>Layar hitam</item>
+        <item>Macet / tidak merespons</item>
+        <item>Keluar sendiri / crash</item>
+        <item>Simpan / muat rusak</item>
+        <item>Teks hilang / rusak</item>
+        <item>Gambar / grafik rusak</item>
+        <item>Tidak ada suara / masalah audio</item>
+    </string-array>
+</resources>

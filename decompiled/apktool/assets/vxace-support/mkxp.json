@@ -1,0 +1,31 @@
+{
+  "debugMode": false,
+  "printFPS": false,
+  "vsync": true,
+  "fixedFramerate": 60,
+  "frameSkip": true,
+  "preloadScript": [
+    "cheats/nil_fix.rb",
+    "cheats/font_exist_fix.rb",
+    "cheats/xp_encoding_fix.rb",
+    "cheats/script_quote_fix.rb",
+    "cheats/skip_missing_files.rb",
+    "cheats/inoritilemapfix.rb",
+    "cheats/touch_move.rb",
+    "cheats/auto_wrap.rb",
+    "cheats/win32api_screen_fix.rb"
+  ],
+  "enableBlitting": true,
+  "maxTextureSize": 0,
+  "threadedImageLoading": true,
+  "glBufferPreallocation": true,
+  "vertexBufferSize": 2097152,
+  "indexBufferSize": 524288,
+  "solidFonts": true,
+  "subImageFix": true,
+  "pathCache": true,
+  "fastPathEnum": true,
+  "smoothScaling": true,
+  "smoothScalingDown": true,
+  "mipmap": true
+}

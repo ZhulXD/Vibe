@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <ImageView android:id="@id/img_renpy_backdrop" android:visibility="gone" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" android:contentDescription="@null" android:alpha="0.35" />
+    <LinearLayout android:gravity="center_horizontal" android:layout_gravity="center" android:orientation="vertical" android:paddingLeft="32.0dp" android:paddingRight="32.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:paddingHorizontal="32.0dp">
+        <ImageView android:id="@id/img_renpy_icon" android:visibility="gone" android:layout_width="96.0dp" android:layout_height="96.0dp" android:scaleType="fitCenter" android:contentDescription="@null" />
+        <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ffffffff" android:id="@id/tv_renpy_loading_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="18.0dp" android:text="@string/renpy_loading_title" />
+        <ProgressBar android:id="@id/pb_renpy_loading" android:layout_width="220.0dp" android:layout_height="wrap_content" android:layout_marginTop="14.0dp" android:indeterminate="true" style="?android:progressBarStyleHorizontal" />
+        <TextView android:textSize="13.0sp" android:textColor="#b3ffffff" android:id="@id/tv_renpy_loading_status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="10.0dp" />
+        <TextView android:textSize="12.0sp" android:textColor="#99ffffff" android:gravity="center" android:id="@id/tv_renpy_loading_stage" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4.0dp" />
+        <TextView android:textSize="12.0sp" android:textColor="#80ffffff" android:gravity="center" android:id="@id/tv_renpy_loading_hint" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6.0dp" android:text="@string/renpy_loading_hint" />
+    </LinearLayout>
+</FrameLayout>

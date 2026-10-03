@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:background="@color/bg" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/layout_header" android:background="@color/s1" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <ImageButton android:id="@id/btn_back" android:background="@null" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/ic_back" android:tint="@color/text_sec" android:layout_marginEnd="12.0dp" />
+        <TextView android:textSize="18.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="Nút điều khiển" android:layout_weight="1.0" />
+        <Button android:textSize="12.0sp" android:textColor="@color/accent" android:id="@id/btn_reset" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Mặc định" style="@style/Widget.MaterialComponents.Button.TextButton" />
+    </LinearLayout>
+    <TextView android:textSize="12.0sp" android:textColor="@color/text_sec" android:padding="16.0dp" android:paddingBottom="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Bật/tắt các nút hiển thị trong game" />
+    <androidx.recyclerview.widget.RecyclerView android:id="@id/recycler_buttons" android:paddingLeft="12.0dp" android:paddingRight="12.0dp" android:clipToPadding="false" android:layout_width="match_parent" android:layout_height="0.0dp" android:layout_weight="1.0" android:paddingHorizontal="12.0dp" />
+</LinearLayout>

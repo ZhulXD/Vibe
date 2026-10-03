@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:paddingLeft="16.0dp" android:paddingTop="10.0dp" android:paddingRight="16.0dp" android:paddingBottom="10.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="16.0dp" android:paddingVertical="10.0dp"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <FrameLayout android:id="@id/bg_rank" android:background="@drawable/bg_card" android:layout_width="28.0dp" android:layout_height="28.0dp">
+        <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="@color/text_mut" android:layout_gravity="center" android:id="@id/tv_rank" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </FrameLayout>
+    <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginStart="12.0dp">
+        <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="@color/text_pri" android:ellipsize="end" android:id="@id/tv_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="2.0dp" android:maxLines="1" />
+        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <TextView android:textSize="8.0sp" android:textStyle="bold" android:id="@id/tv_engine" android:paddingLeft="5.0dp" android:paddingTop="1.0dp" android:paddingRight="5.0dp" android:paddingBottom="1.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="6.0dp" android:paddingHorizontal="5.0dp" android:paddingVertical="1.0dp" />
+            <TextView android:textSize="10.0sp" android:textColor="@color/text_mut" android:id="@id/tv_playtime" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </LinearLayout>
+    </LinearLayout>
+    <TextView android:textSize="10.0sp" android:textStyle="bold" android:textColor="@color/accent" android:id="@id/tv_hot" android:background="@drawable/bg_badge" android:paddingLeft="8.0dp" android:paddingTop="2.0dp" android:paddingRight="8.0dp" android:paddingBottom="2.0dp" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="HOT" android:paddingHorizontal="8.0dp" android:paddingVertical="2.0dp" />
+</LinearLayout>

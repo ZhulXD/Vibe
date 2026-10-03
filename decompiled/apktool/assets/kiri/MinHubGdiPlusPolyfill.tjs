@@ -1,0 +1,250 @@
+// [MinHub:gdiplus-polyfill-v1] pure-TJS stand-in for Windows-only layerExDraw.dll
+//
+// layerExDraw.dll is KiriKiri's vector-drawing plugin. It is a PE binary, so it cannot load on
+// Android and MinHub replaces it with an empty stub. That stops the plugin-linking call from
+// script, but it does not create the class the scripts go on to use: the first
+// `new GdiPlus.Appearance()` raised `Member "GdiPlus" does not exist` and the game closed.
+//
+// A try/catch around the call site cannot fix this. The script needs the object to exist, because
+// the next line calls a method on it and the line after that hands it to a Layer.
+//
+// What the games actually use is narrow: an Appearance that collects pens and brushes, and a
+// handful of Layer draw* methods that consume it. Every use found in a real release is window
+// dressing — rounded message frames, a resize grip, rain, eye-catch flourishes, album borders.
+// None of it is game content, so this file deliberately draws only what it can draw honestly with
+// the engine's own colorRect: axis-aligned rectangles and straight horizontal/vertical lines.
+// Curves, arcs and diagonal polygons are accepted and ignored rather than approximated badly.
+//
+// Nothing here replaces a working plugin: if a real GdiPlus exists, this file does nothing.
+
+try { var __minhub_gdi_probe = global.GdiPlus; }
+catch (__minhub_gdi_e)
+{
+
+// The constant names the scripts reference. The values only have to be distinct and stable —
+// nothing outside this file interprets them.
+global.GdiPlus = %[
+	BrushTypeSolidFill:      0,
+	BrushTypeHatchFill:      1,
+	BrushTypeTextureFill:    2,
+	BrushTypePathGradient:   3,
+	BrushTypeLinearGradient: 4,
+
+	HatchStyleHorizontal:     0,
+	HatchStyleVertical:       1,
+	HatchStyleForwardDiagonal:2,
+	HatchStyleBackwardDiagonal:3,
+	HatchStyleCross:          4,
+	HatchStyleDiagonalCross:  5,
+	HatchStyleDiagonalBrick:  6,
+
+	DashStyleSolid:      0,
+	DashStyleDash:       1,
+	DashStyleDot:        2,
+	DashStyleDashDot:    3,
+	DashStyleDashDotDot: 4,
+
+	LineCapFlat:   0,
+	LineCapRound:  1,
+	LineCapSquare: 2,
+
+	FillModeAlternate: 0,
+	FillModeWinding:   1,
+
+	UnitPixel: 2
+];
+
+// A colour argument may be a plain ARGB integer or a brush/pen dictionary. Returns void when no
+// colour can be read, which every caller below treats as "draw nothing".
+global.__minhubGdiColor = function(value)
+{
+	if (value === void) return void;
+	try
+	{
+		// A dictionary: prefer the colour a fill would actually show.
+		var c = value.color;
+		if (c !== void) return int(c);
+		c = value.backColor;
+		if (c !== void) return int(c);
+		c = value.foreColor;
+		if (c !== void) return int(c);
+		return void;
+	}
+	catch (e)
+	{
+		// Not a dictionary, so it is the colour itself.
+		try { return int(value); } catch (e2) { return void; }
+	}
+} incontextof null;
+
+// Pen width may be given as a number or inside a dictionary.
+global.__minhubGdiWidth = function(value)
+{
+	if (value === void) return 1;
+	try
+	{
+		var w = value.width;
+		if (w !== void) return int(w);
+		return 1;
+	}
+	catch (e)
+	{
+		try
+		{
+			var n = int(value);
+			if (n < 1) return 1;
+			return n;
+		}
+		catch (e2) { return 1; }
+	}
+} incontextof null;
+
+// One honest primitive: an axis-aligned filled rectangle, clipped to the layer.
+global.__minhubGdiFill = function(layer, x, y, w, h, argb)
+{
+	if (argb === void) return;
+	if (w <= 0 || h <= 0) return;
+	try
+	{
+		var lw = layer.width;
+		var lh = layer.height;
+		if (x < 0) { w += x; x = 0; }
+		if (y < 0) { h += y; y = 0; }
+		if (x + w > lw) w = lw - x;
+		if (y + h > lh) h = lh - y;
+		if (w <= 0 || h <= 0) return;
+		var opacity = (argb >> 24) & 0xff;
+		if (opacity == 0) return;
+		layer.colorRect(int(x), int(y), int(w), int(h), argb & 0xffffff, opacity);
+	}
+	catch (e) { }
+} incontextof null;
+
+class MinHubGdiAppearance
+{
+	var pens;
+	var brushes;
+
+	function MinHubGdiAppearance()
+	{
+		pens = [];
+		brushes = [];
+	}
+
+	function finalize()
+	{
+		clear();
+	}
+
+	// The real signatures take further transform/offset arguments that mean nothing without a
+	// vector canvas; they are accepted and ignored.
+	function addPen(color, width, a3, a4, a5, a6)
+	{
+		pens.add(%[ color: global.__minhubGdiColor(color), width: global.__minhubGdiWidth(width) ]);
+		return pens.count - 1;
+	}
+
+	function addBrush(color, a2, a3, a4, a5, a6)
+	{
+		brushes.add(%[ color: global.__minhubGdiColor(color) ]);
+		return brushes.count - 1;
+	}
+
+	function clear()
+	{
+		if (pens !== void) pens.clear();
+		if (brushes !== void) brushes.clear();
+	}
+
+	/** The colour a fill should use, or void when the caller added no brush. */
+	function fillColor()
+	{
+		if (brushes === void || brushes.count == 0) return void;
+		return brushes[brushes.count - 1].color;
+	}
+
+	/** The colour an outline should use, or void when the caller added no pen. */
+	function strokeColor()
+	{
+		if (pens === void || pens.count == 0) return void;
+		return pens[pens.count - 1].color;
+	}
+
+	function strokeWidth()
+	{
+		if (pens === void || pens.count == 0) return 1;
+		var w = pens[pens.count - 1].width;
+		if (w === void || w < 1) return 1;
+		return w;
+	}
+}
+
+global.GdiPlus.Appearance = MinHubGdiAppearance;
+
+// ---------------------------------------------------------------- Layer drawing
+
+// Drawn faithfully: the shape is axis-aligned, so colorRect reproduces it exactly.
+Layer.drawRectangle = function(app, x, y, w, h)
+{
+	if (app === void) return;
+	global.__minhubGdiFill(this, x, y, w, h, app.fillColor());
+	var stroke = app.strokeColor();
+	if (stroke === void) return;
+	var t = app.strokeWidth();
+	if (t * 2 > w || t * 2 > h) { global.__minhubGdiFill(this, x, y, w, h, stroke); return; }
+	global.__minhubGdiFill(this, x,         y,         w, t,         stroke);
+	global.__minhubGdiFill(this, x,         y + h - t, w, t,         stroke);
+	global.__minhubGdiFill(this, x,         y,         t, h,         stroke);
+	global.__minhubGdiFill(this, x + w - t, y,         t, h,         stroke);
+};
+
+// Drawn only when the line is horizontal or vertical; a diagonal would need per-pixel work that
+// this stand-in deliberately does not attempt.
+Layer.drawLine = function(app, x1, y1, x2, y2)
+{
+	if (app === void) return;
+	var stroke = app.strokeColor();
+	if (stroke === void) return;
+	var t = app.strokeWidth();
+	if (y1 == y2)
+	{
+		var left = x1 < x2 ? x1 : x2;
+		global.__minhubGdiFill(this, left, y1 - t \ 2, (x1 > x2 ? x1 - x2 : x2 - x1), t, stroke);
+	}
+	else if (x1 == x2)
+	{
+		var top = y1 < y2 ? y1 : y2;
+		global.__minhubGdiFill(this, x1 - t \ 2, top, t, (y1 > y2 ? y1 - y2 : y2 - y1), stroke);
+	}
+};
+
+// A run of points: every axis-aligned segment is drawn, the rest are skipped.
+Layer.drawLines = function(app, points)
+{
+	if (app === void || points === void) return;
+	try
+	{
+		for (var i = 0; i + 1 < points.count; i++)
+		{
+			var a = points[i];
+			var b = points[i + 1];
+			Layer.drawLine incontextof this (app, a[0], a[1], b[0], b[1]);
+		}
+	}
+	catch (e) { }
+};
+
+// Accepted and ignored: these are curves and diagonals, and a bad approximation would look worse
+// than the decoration simply being absent.
+Layer.drawPolygon  = function(app, points) { };
+Layer.fillPolygon  = function(app, points) { };
+Layer.drawBeziers  = function(app, points) { };
+Layer.drawArc      = function(app, x, y, w, h, start, sweep) { };
+Layer.fillArc      = function(app, x, y, w, h, start, sweep) { };
+Layer.drawEllipse  = function(app, x, y, w, h) { };
+Layer.fillEllipse  = function(app, x, y, w, h) { };
+Layer.drawPath     = function(app, path) { };
+Layer.fillPath     = function(app, path) { };
+Layer.drawCurve    = function(app, points) { };
+
+}

@@ -1,0 +1,77 @@
+2026-07-19 11:47:24.855 19643-19643 DecorView               com.minhub.gamehub                   I  PackageName = com.minhub.gamehub false
+2026-07-19 11:47:24.855 19643-19643 DecorView               com.minhub.gamehub                   I  PackageName = com.minhub.gamehub false
+2026-07-19 11:47:24.857 19643-19643 DecorView               com.minhub.gamehub                   I  PackageName = com.minhub.gamehub false
+2026-07-19 11:47:24.857 19643-19643 Instrumentation         com.minhub.gamehub                   I  SmartScene callActivityOnResume isMonkey = false
+2026-07-19 11:47:24.860 19643-19643 DecorView               com.minhub.gamehub                   I  PackageName = com.minhub.gamehub false
+2026-07-19 11:47:24.863 19643-19643 DecorView               com.minhub.gamehub                   I  PackageName = com.minhub.gamehub false
+2026-07-19 11:47:24.884 19643-19643 DecorView               com.minhub.gamehub                   I  PackageName = com.minhub.gamehub false
+2026-07-19 11:47:27.681 19643-19643 DecorView               com.minhub.gamehub                   I  PackageName = com.minhub.gamehub false
+2026-07-19 11:47:27.681 19643-19643 DecorView               com.minhub.gamehub                   I  PackageName = com.minhub.gamehub false
+2026-07-19 11:47:27.715 19643-19643 MinHub-Launch           com.minhub.gamehub                   I  gameId=43 title=Sword Mistress of the Dungeon Town
+2026-07-19 11:47:27.715 19643-19643 MinHub-Launch           com.minhub.gamehub                   I  gamePath=/storage/emulated/0/Android/data/com.minhub.gamehub/files/games/RJ309974_HUB_1784436351734/RJ309974_HUB
+2026-07-19 11:47:27.715 19643-19643 MinHub-Launch           com.minhub.gamehub                   I  resolvedRoot=/storage/emulated/0/Android/data/com.minhub.gamehub/files/games/RJ309974_HUB_1784436351734/RJ309974_HUB
+2026-07-19 11:47:27.715 19643-19643 MinHub-Launch           com.minhub.gamehub                   I  indexExists=true
+2026-07-19 11:47:27.715 19643-19643 MinHub-Launch           com.minhub.gamehub                   I  finalUrl=file:///storage/emulated/0/Android/data/com.minhub.gamehub/files/games/RJ309974_HUB_1784436351734/RJ309974_HUB/index.html
+2026-07-19 11:47:27.719 19643-19643 DecorView               com.minhub.gamehub                   I  PackageName = com.minhub.gamehub false
+2026-07-19 11:47:27.720 19643-19643 Instrumentation         com.minhub.gamehub                   I  SmartScene callActivityOnResume isMonkey = false
+2026-07-19 11:47:27.723 19643-19643 cr_WebSettings          com.minhub.gamehub                   W  setForceDark() is a no-op in an app with targetSdkVersion>=T
+2026-07-19 11:47:27.725 19643-19643 DecorView               com.minhub.gamehub                   I  PackageName = com.minhub.gamehub false
+2026-07-19 11:47:27.738 19643-19643 DecorView               com.minhub.gamehub                   I  PackageName = com.minhub.gamehub false
+2026-07-19 11:47:27.751 19643-19643 DecorView               com.minhub.gamehub                   I  PackageName = com.minhub.gamehub false
+2026-07-19 11:47:27.869 19643-20202 MinHub-Live2D           com.minhub.gamehub                   I  Cubism Core override -> 4.2.4 for live2dcubismcore_min.js
+2026-07-19 11:47:27.895 19643-19643 MinHub-JS               com.minhub.gamehub                   I   %c %c %c PixiJS 4.5.4 - ✰ WebGL ✰  %c  %c  http://www.pixijs.com/  %c %c ♥%c♥%c♥ 
+                                                                                                    
+                                                                                                     background: #ff66a5; padding:5px 0; background: #ff66a5; padding:5px 0; color: #ff66a5; background: #030307; padding:5px 0; background: #ff66a5; padding:5px 0; background: #ffc3dc; padding:5px 0; background: #ff66a5; padding:5px 0; color: #ff2424; background: #fff; padding:5px 0; color: #ff2424; background: #fff; padding:5px 0; color: #ff2424; background: #fff; padding:5px 0; @ file:///storage/emulated/0/Android/data/com.minhub.gamehub/files/games/RJ309974_HUB_1784436351734/RJ309974_HUB/js/libs/pixi.js:27682
+2026-07-19 11:47:27.959 19643-19643 MinHub-JS               com.minhub.gamehub                   I  Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently @ file:///storage/emulated/0/Android/data/com.minhub.gamehub/files/games/RJ309974_HUB_1784436351734/RJ309974_HUB/js/rpg_core.js:2430
+2026-07-19 11:47:28.004 19643-20209 AAudio                  com.minhub.gamehub                   I  AAudioStreamBuilder_openStream() called ----------------------------------------
+2026-07-19 11:47:28.004 19643-20209 AudioStreamBuilder      com.minhub.gamehub                   I  rate   =  48000, channels  = 2, channelMask = 0x3, format   = 5, sharing = SH, dir = OUTPUT
+2026-07-19 11:47:28.004 19643-20209 AudioStreamBuilder      com.minhub.gamehub                   I  device =      0, sessionId = -1, perfMode = 12, callback: ON with frames = 192
+2026-07-19 11:47:28.004 19643-20209 AudioStreamBuilder      com.minhub.gamehub                   I  usage  =      1, contentType = 0, inputPreset = 0, allowedCapturePolicy = 0
+2026-07-19 11:47:28.004 19643-20209 AudioStreamBuilder      com.minhub.gamehub                   I  privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+2026-07-19 11:47:28.019 19643-20209 AudioTrack              com.minhub.gamehub                   I  createTrack_l(0): AUDIO_OUTPUT_FLAG_FAST successful; frameCount 0 -> 1536
+2026-07-19 11:47:28.019 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [GlobalInfoCache] installed
+2026-07-19 11:47:28.020 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [AudioCache] installed
+2026-07-19 11:47:28.020 19643-20209 AAudio                  com.minhub.gamehub                   I  AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#6 ----------------
+2026-07-19 11:47:28.022 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [TargetedFix] applied
+2026-07-19 11:47:28.024 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [MinHub] MvCFPatch: script loaded
+2026-07-19 11:47:28.024 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [StuckInterp] installed
+2026-07-19 11:47:28.025 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [SceneWatchdog] installed
+2026-07-19 11:47:28.025 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [ErrCapture] JSON.parse patched
+2026-07-19 11:47:28.025 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [ErrCapture] Graphics.printError hooked
+2026-07-19 11:47:28.026 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [MinHub] Live2D PlatformManager.loadBytes core-ready guard installed
+2026-07-19 11:47:28.026 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [FakeLoad] applied
+2026-07-19 11:47:28.029 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [Bridge] _applyBridge(init)
+2026-07-19 11:47:28.030 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [Bridge] hooking Scene_Boot.prototype.create (attempt=0)
+2026-07-19 11:47:28.036 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [OTA] runtime patch v1 applied (engine=MV)
+2026-07-19 11:47:28.037 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [ReduceFx] Weather hook installed
+2026-07-19 11:47:28.037 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [ReduceFx] applied ON=true weather=true terrax=true mogcm=false fog=false splash=true titleP=false titleBg=false
+2026-07-19 11:47:28.039 19643-19643 MinHub-JS               com.minhub.gamehub                   I  [WebGL Fix] RMMV texImage2D downscale guard installed @ :1419
+2026-07-19 11:47:28.043 19643-20222 MinHub-JS               com.minhub.gamehub                   I  Renderer requested=webgl2 actual=webgl1
+2026-07-19 11:47:28.104 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [CaseMap] hooks installed img=4437 snd=440
+2026-07-19 11:47:28.110 19643-19643 DecorView               com.minhub.gamehub                   I  PackageName = com.minhub.gamehub false
+2026-07-19 11:47:28.113 19643-19643 WindowOnBackDispatcher  com.minhub.gamehub                   W  sendCancelIfRunning: isInProgress=falsecallback=android.app.Activity$$ExternalSyntheticLambda1@1092dc8
+2026-07-19 11:47:28.126 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [Bridge] loadFromWebStorage slot=0 found=false
+2026-07-19 11:47:28.126 19643-19643 DecorView               com.minhub.gamehub                   I  PackageName = com.minhub.gamehub false
+2026-07-19 11:47:28.131 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [MinHub] MvCFPatch: applied renderer=webgl1
+2026-07-19 11:47:28.166 19643-19643 MinHub-JS               com.minhub.gamehub                   I  [WebGL Fix] RMMV usable texture size (canvas-upload, live ctx): 2048 @ :1346
+2026-07-19 11:47:30.277 19643-19643 MinHub-JS               com.minhub.gamehub                   I  Live2D Cubism SDK Core Version 4.2.4 @ file:///storage/emulated/0/Android/data/com.minhub.gamehub/files/games/RJ309974_HUB_1784436351734/RJ309974_HUB/js/plugins/live2dcubismcore_min.js:9
+2026-07-19 11:47:30.292 19643-19643 MinHub-JS               com.minhub.gamehub                   I  roop break @ :1
+2026-07-19 11:47:30.292 19643-19643 MinHub-JS               com.minhub.gamehub                   I  pos2 @ :1
+2026-07-19 11:47:30.292 19643-19643 MinHub-JS               com.minhub.gamehub                   I  idling!! @ :1
+2026-07-19 11:47:32.589 19643-20209 AAudio                  com.minhub.gamehub                   I  AAudioStreamBuilder_openStream() called ----------------------------------------
+2026-07-19 11:47:32.589 19643-20209 AudioStreamBuilder      com.minhub.gamehub                   I  rate   =  48000, channels  = 2, channelMask = 0x3, format   = 5, sharing = SH, dir = OUTPUT
+2026-07-19 11:47:32.589 19643-20209 AudioStreamBuilder      com.minhub.gamehub                   I  device =      0, sessionId = -1, perfMode = 12, callback: ON with frames = 192
+2026-07-19 11:47:32.589 19643-20209 AudioStreamBuilder      com.minhub.gamehub                   I  usage  =      1, contentType = 0, inputPreset = 0, allowedCapturePolicy = 0
+2026-07-19 11:47:32.589 19643-20209 AudioStreamBuilder      com.minhub.gamehub                   I  privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+2026-07-19 11:47:32.609 19643-20209 AudioTrack              com.minhub.gamehub                   I  createTrack_l(0): AUDIO_OUTPUT_FLAG_FAST successful; frameCount 0 -> 1536
+2026-07-19 11:47:32.612 19643-20209 AAudio                  com.minhub.gamehub                   I  AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#8 ----------------
+2026-07-19 11:47:33.346 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [StuckInterp] stuck waitMode="message" for >3s @ index=26 cmdCode=402 mapId=31 eventId=1 isBattle=false
+2026-07-19 11:47:36.945 19643-19703 ActivityThread          com.minhub.gamehub                   E  Failed to find provider info for com.meizu.picker.dataProvider
+2026-07-19 11:47:36.945 19643-19703 ContentCapture          com.minhub.gamehub                   W  isAgreePrivacy = null
+2026-07-19 11:47:37.918 19643-19703 ActivityThread          com.minhub.gamehub                   E  Failed to find provider info for com.meizu.picker.dataProvider
+2026-07-19 11:47:37.918 19643-19703 ContentCapture          com.minhub.gamehub                   W  isAgreePrivacy = null
+2026-07-19 11:47:39.831 19643-19643 MinHub-JS               com.minhub.gamehub                   I  roop break @ :1
+2026-07-19 11:47:39.832 19643-19643 MinHub-JS               com.minhub.gamehub                   I  pos1 @ :1
+2026-07-19 11:47:39.832 19643-19643 MinHub-JS               com.minhub.gamehub                   I  idling!! @ :1
+2026-07-19 11:47:48.926 19643-19643 Choreographer           com.minhub.gamehub                   I  Skipped 30 frames!  The application may be doing too much work on its main thread.
+2026-07-19 11:47:51.343 19643-20222 MinHub-JS               com.minhub.gamehub                   I  [StuckInterp] stuck waitMode="message" for >3s @ index=214 cmdCode=203 mapId=32 eventId=1 isBattle=false

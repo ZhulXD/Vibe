@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:background="@drawable/bg_dialog_account" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:gravity="center_horizontal" android:orientation="vertical" android:paddingTop="28.0dp" android:paddingBottom="20.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="24.0dp" android:paddingEnd="24.0dp">
+        <FrameLayout android:background="@drawable/bg_account_badge" android:layout_width="64.0dp" android:layout_height="64.0dp" android:layout_marginBottom="12.0dp">
+            <TextView android:textSize="26.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:layout_gravity="center" android:id="@id/tv_account_number" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </FrameLayout>
+        <TextView android:textSize="10.0sp" android:textColor="@color/accent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="8.0dp" android:text="@string/login_account_label" android:letterSpacing="0.2" />
+        <TextView android:textSize="13.0sp" android:textColor="@color/text_sec" android:gravity="center" android:id="@id/tv_hint" android:layout_width="match_parent" android:layout_height="wrap_content" android:lineSpacingMultiplier="1.5" />
+    </LinearLayout>
+    <View android:background="@color/s4" android:layout_width="match_parent" android:layout_height="1.0dp" />
+    <LinearLayout android:orientation="vertical" android:paddingTop="20.0dp" android:paddingBottom="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="24.0dp" android:paddingEnd="24.0dp">
+        <TextView android:textSize="10.0sp" android:textColor="@color/text_mut" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="6.0dp" android:text="@string/login_account_username_label" android:letterSpacing="0.12" />
+        <EditText android:enabled="false" android:textSize="15.0sp" android:textColor="@color/text_sec" android:id="@id/et_username" android:background="@drawable/bg_input_dark" android:layout_width="match_parent" android:layout_height="@dimen/control_height_48" android:layout_marginBottom="16.0dp" android:inputType="textNoSuggestions" android:paddingStart="14.0dp" android:paddingEnd="14.0dp" />
+        <TextView android:textSize="10.0sp" android:textColor="@color/text_mut" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="6.0dp" android:text="@string/login_account_password_label" android:letterSpacing="0.12" />
+        <EditText android:textSize="15.0sp" android:textColor="@color/text_pri" android:textColorHint="@color/text_sec" android:id="@id/et_password" android:background="@drawable/bg_input_dark" android:layout_width="match_parent" android:layout_height="@dimen/control_height_48" android:layout_marginBottom="20.0dp" android:hint="@string/login_account_password_hint" android:inputType="textPassword" android:paddingStart="14.0dp" android:paddingEnd="14.0dp" />
+        <Button android:textSize="14.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:id="@id/btn_login" android:background="@drawable/bg_btn_accent" android:layout_width="match_parent" android:layout_height="@dimen/control_height_48" android:layout_marginBottom="4.0dp" android:text="@string/login_account_btn_login" android:textAllCaps="false" />
+        <Button android:textSize="13.0sp" android:textColor="@color/text_pri" android:id="@id/btn_get_password" android:background="@drawable/bg_btn_outline" android:layout_width="match_parent" android:layout_height="@dimen/control_height_48" android:layout_marginBottom="4.0dp" android:text="@string/login_account_get_password" android:textAllCaps="false" />
+        <Button android:textSize="13.0sp" android:textColor="@color/text_sec" android:id="@id/btn_cancel" android:background="@android:color/transparent" android:layout_width="match_parent" android:layout_height="40.0dp" android:text="@string/cancel" android:textAllCaps="false" />
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:textSize="12.0sp" android:textColor="@color/text_sec" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" android:text="@string/dialog_keymap_subtitle" />
+    <LinearLayout android:gravity="center" android:orientation="vertical" android:id="@id/mini_keyboard_container" android:layout_width="match_parent" android:layout_height="wrap_content" />
+    <TextView android:textSize="11.0sp" android:textColor="@color/text_sec" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12.0dp" android:layout_marginBottom="8.0dp" android:text="@string/dialog_keymap_special" />
+    <LinearLayout android:gravity="center" android:orientation="horizontal" android:id="@id/special_keys_container" android:layout_width="match_parent" android:layout_height="wrap_content" />
+</LinearLayout>
