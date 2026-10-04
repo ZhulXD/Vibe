@@ -372,6 +372,97 @@ else
 end
 
 note("")
+note("--- scene enumeration ---")
+-- This is where AIDump lives or dies: every document is built from a walk of
+-- the instance tree. If game:GetChildren() does not work, the walk yields only
+-- the root and every other document comes out empty.
+do
+	local okType, gameType = pcall(type, game)
+	note("type(game)     " .. tostring(gameType) .. " (pcall ok: " .. tostring(okType) .. ")")
+	local okTypeof, gameTypeof = pcall(typeof, game)
+	note("typeof(game)   " .. tostring(gameTypeof) .. " (pcall ok: " .. tostring(okTypeof) .. ")")
+
+	local okChildren, children = pcall(function() return game:GetChildren() end)
+	if not okChildren then
+		note("GetChildren()  RAISED: " .. tostring(children))
+	elseif type(children) ~= "table" then
+		note("GetChildren()  returned " .. type(children))
+	else
+		note("GetChildren()  ok, " .. tostring(#children) .. " child(ren)")
+		local shown = 0
+		for _, child in ipairs(children) do
+			if shown < 12 then
+				local okName, label = pcall(function() return child:GetFullName() end)
+				note("   - " .. (okName and tostring(label) or "<unreadable>"))
+				shown += 1
+			end
+		end
+		if #children > shown then
+			note("   ... " .. tostring(#children - shown) .. " more")
+		end
+	end
+
+	local okDesc, descendants = pcall(function() return game:GetDescendants() end)
+	if not okDesc then
+		note("GetDescendants RAISED: " .. tostring(descendants))
+	elseif type(descendants) ~= "table" then
+		note("GetDescendants returned " .. type(descendants))
+	else
+		note("GetDescendants ok, " .. tostring(#descendants) .. " descendant(s)")
+	end
+
+	local getnil = lookup("getnilinstances")
+	if getnil then
+		local okNil, nils = pcall(getnil)
+		if not okNil then
+			note("getnilinstances RAISED: " .. tostring(nils))
+		elseif type(nils) ~= "table" then
+			note("getnilinstances returned " .. type(nils))
+		else
+			note("getnilinstances ok, " .. tostring(#nils) .. " nil-parented instance(s)")
+			local classes = {}
+			for _, instance in ipairs(nils) do
+				local okClass, className = pcall(function() return instance.ClassName end)
+				if okClass then
+					classes[className] = (classes[className] or 0) + 1
+				end
+			end
+			local names = {}
+			for className in pairs(classes) do
+				names[#names + 1] = className
+			end
+			table.sort(names)
+			for _, className in ipairs(names) do
+				note("   nil " .. className .. " x" .. tostring(classes[className]))
+			end
+		end
+	else
+		note("getnilinstances absent")
+	end
+end
+
+note("")
+note("--- http service ---")
+do
+	local okSvc, service = pcall(function() return game:GetService("HttpService") end)
+	if not okSvc then
+		note("GetService(RAISED: " .. tostring(service))
+	elseif type(service) ~= "Instance" then
+		note("GetService returned " .. type(service))
+	else
+		note("HttpService   found")
+		note("  JSONEncode  " .. tostring(type(service.JSONEncode)))
+		note("  JSONDecode  " .. tostring(type(service.JSONDecode)))
+		local okRound, encoded = pcall(function() return service:JSONEncode({ A = 1 }) end)
+		if okRound then
+			note("  round trip  " .. tostring(encoded))
+		else
+			note("  round trip  RAISED: " .. tostring(encoded))
+		end
+	end
+end
+
+note("")
 note("--- interpreter ---")
 if type(loadstring) == "function" then
 	local fn = loadstring("return 1 + 1")

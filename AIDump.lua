@@ -2816,7 +2816,11 @@ local SECTION4 = {
 			List = {},
 			ByDebugId = {},
 			ByPath = {},
-			Counts = { Total = 0, Viable = 0, Decompilable = 0 },
+			Counts = { Total = 0, Viable = 0, Decompilable = 0, SkippedByCap = 0, Duplicate = 0 },
+			-- Hard cap. getnilinstances on some executors returns tens of
+			-- thousands of objects, and an uncapped inventory produced a 2.2MB
+			-- table and a decompilation backlog that could never finish.
+			MaxScripts = 4000,
 		}
 
 		local SCRIPT_CLASSES = {
@@ -2864,7 +2868,13 @@ local SECTION4 = {
 			table.clear(Scripts.List)
 			table.clear(Scripts.ByDebugId)
 			table.clear(Scripts.ByPath)
-			Scripts.Counts = { Total = 0, Viable = 0, Decompilable = 0 }
+			Scripts.Counts = {
+				Total = 0, Viable = 0, Decompilable = 0,
+				SkippedByCap = 0, Duplicate = 0, WithoutDebugId = 0,
+			}
+			-- getnilinstances can report an object that is also reachable from the
+			-- tree, and counting both inflated the inventory on the first real run.
+			local seen = {}
 
 			local list = Scene.Walk({ MaxInstances = 60000, MaxDepth = 96, IncludeNil = true, YieldEvery = 400 })
 			Scripts.WalkCounts = list[2]
@@ -2872,8 +2882,21 @@ local SECTION4 = {
 			for _, entry in ipairs(list) do
 				local instance = entry.Instance
 				if SCRIPT_CLASSES[instance.ClassName] then
-					local viable, reason = Scripts.IsViable(instance)
+					if Scripts.Counts.Total >= Scripts.MaxScripts then
+						Scripts.Counts.SkippedByCap += 1
+						continue
+					end
 					local debugId = Compat.DebugId(instance)
+					if debugId and seen[debugId] then
+						Scripts.Counts.Duplicate += 1
+						continue
+					end
+					if debugId then
+						seen[debugId] = true
+					else
+						Scripts.Counts.WithoutDebugId += 1
+					end
+					local viable, reason = Scripts.IsViable(instance)
 					local record = {
 						Instance = instance,
 						ClassName = instance.ClassName,
@@ -5645,6 +5668,10 @@ local SECTION9 = {
 			-- properties is capped far below the number that get listed.
 			RawInstances = 20000,
 			RawPropertiesForInstances = 4000,
+			-- 05-SCRIPTS.md is meant to be read by a model, so it lists a bounded
+			-- number of rows and points at raw/scripts.json for the rest. An
+			-- uncapped table reached 2.2MB on the first real run.
+			ScriptTableRows = 800,
 		}
 		Report.BUDGET = BUDGET
 
@@ -6329,6 +6356,9 @@ local SECTION9 = {
 				{ "Readable by the client", Scripts.Counts.Viable },
 				{ "Not client-side or unreadable",
 					Scripts.Counts.Total - Scripts.Counts.Viable },
+				{ "Skipped by the inventory cap", Scripts.Counts.SkippedByCap or 0 },
+				{ "Skipped as duplicates", Scripts.Counts.Duplicate or 0 },
+				{ "Had no readable debug id", Scripts.Counts.WithoutDebugId or 0 },
 			}))
 			L("")
 
@@ -6355,7 +6385,14 @@ local SECTION9 = {
 
 			L(Md.Heading(2, "Script inventory and cross-reference"))
 			L("")
+			if Scripts.Counts.Total > BUDGET.ScriptTableRows then
+				L(Md.Bullet(string.format(
+					"The table below lists the first %d of %d scripts by path. The remainder are in raw/scripts.json.",
+					BUDGET.ScriptTableRows, Scripts.Counts.Total)))
+				L("")
+			end
 			local rows = {}
+			local rowsOmitted = 0
 			for _, record in ipairs(Scripts.List) do
 				local fires = {}
 				for key, count in pairs(record.FiresOutgoing) do
@@ -6388,13 +6425,16 @@ local SECTION9 = {
 					return table.concat(parts, "<br>")
 				end
 
-				rows[#rows + 1] = {
-					Md.Code(record.Path),
-					record.ClassName,
-					record.RunContext or "—",
-					record.Disabled and "yes" or "no",
-					record.Decompile or "not attempted",
-					renderList(fires, function(entry)
+				if #rows >= BUDGET.ScriptTableRows then
+					rowsOmitted += 1
+				else
+					rows[#rows + 1] = {
+						Md.Code(record.Path),
+						record.ClassName,
+						record.RunContext or "—",
+						record.Disabled and "yes" or "no",
+						record.Decompile or "not attempted",
+						renderList(fires, function(entry)
 						-- entry[3] is the line, stringified when the call site was
 						-- recorded. It is the literal string "nil" on executors
 						-- without getcallingline, which is a fact about this run
@@ -6409,13 +6449,20 @@ local SECTION9 = {
 						return string.format("%s:%s x%d", entry[1], entry[2], entry[3])
 					end),
 					Scripts.Counts.Viable and record.Reason or "—",
-				}
+					}
+				end
 			end
 			L(Md.Table({
 				"Script path", "Class", "RunContext", "Disabled", "Decompiled by",
 				"Outgoing calls observed", "Incoming handled", "Unavailability reason",
 			}, rows, { "---", "---", "---", ":---:", "---", "---", "---", "---" }))
 			L("")
+			if rowsOmitted > 0 then
+				L(Md.Bullet(string.format(
+					"%d further script(s) were omitted from the table above; all of them are in raw/scripts.json.",
+					rowsOmitted)))
+				L("")
+			end
 
 			-- Scripts that were never seen participating in traffic.
 			local quiet = {}
@@ -7778,16 +7825,18 @@ local SECTION10 = {
 				return true
 			end)
 
+			-- CFrame.new takes 3 arguments, or 7 with a rotation. Six is invalid, and
+			-- using six here made this check fail for a reason that had nothing to
+			-- do with the serialiser under test.
 			check("value serialiser emits compilable Luau", function()
 				local fixture = {
 					Text = "hello",
 					Count = 42,
 					Ratio = 1 / 3,
 					Flag = true,
-					Nothing = nil,
 					Vector = Vector3.new(1.5, -2, 3),
 					Colour = Color3.new(1, 0, 0),
-					Position = CFrame.new(1, 2, 3, 0, 0, 90),
+					Position = CFrame.new(1, 2, 3) * CFrame.fromEulerAnglesXYZ(0, 0, math.pi / 2),
 					Scale = UDim2.new(0, 10, 1, 20),
 					Range = NumberRange.new(1, 5),
 					Enumerated = Util.EnumMember("Material", "Neon"),
@@ -7798,6 +7847,12 @@ local SECTION10 = {
 				local compiled, err = loadstring("return " .. emitted)
 				assert(compiled, "serialised fixture did not compile: " .. tostring(err)
 					.. " output began: " .. Util.Truncate(emitted, 120))
+				local ran, value = pcall(function() return compiled() end)
+				assert(ran, "serialised fixture did not run: " .. Util.Truncate(tostring(value), 120))
+				assert(type(value) == "table", "fixture did not evaluate to a table")
+				assert(value.Count == 42, "integer did not survive")
+				assert(value.Text == "hello", "string did not survive")
+				assert(value.Ratio == 1 / 3, "fraction did not survive: " .. tostring(value.Ratio))
 				return true
 			end)
 
