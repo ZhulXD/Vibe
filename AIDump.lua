@@ -2579,6 +2579,21 @@ local SECTION4 = {
 			PrivateServerOwnerId = true,
 			RobloxLocked = true,
 			CreatorType = false,
+			-- Named from the first real run, which reported them as the most
+			-- frequent unreadable properties. Each one raised an engine message
+			-- on every instance that had it.
+			AeroMeshData = true,
+			AlternateMeshHash = true,
+			Attributes = true,
+			AttributesReplicate = true,
+			AvatarUnificationMode = true,
+			CollisionGroupData = true,
+			CollisionGroupReplicate = true,
+			DataModelPlaceVersion = true,
+			DefinesCapabilities = true,
+			DraggingV1 = true,
+			EnableSLIMAvatars = true,
+			ExpandedTerrain = true,
 		}
 
 		--- Reads that fail are counted, and property reading switches itself off
@@ -5181,6 +5196,47 @@ local SECTION7 = {
 			return source, nil
 		end
 
+		--- Recognises the placeholder text an executor's decompiler returns when it
+		--- gives up.
+		---
+		--- This matters more than it looks. Delta's `decompile` exists, returns a
+		--- non-empty string, and that string is `-- decompilation panicked`. A
+		--- non-empty check accepts it, so every one of 126 scripts was recorded as
+		--- successfully decompiled while containing no source at all. Output that
+		--- looks like a success but is not is worse than an honest failure, so
+		--- these are treated as failures and the bytecode layer is tried instead.
+		local DECOMPILER_FAILURE_MARKERS = {
+			"decompilation panicked",
+			"panic",
+			"failed to decompile",
+			"decompile failed",
+			"could not decompile",
+			"unsupported bytecode",
+			"not supported",
+			"unknown opcode",
+		}
+
+		local function looksLikeDecompilerFailure(text)
+			if type(text) ~= "string" then
+				return true, "not a string"
+			end
+			local trimmed = text:match("^%s*(.-)%s*$")
+			if #trimmed == 0 then
+				return true, "empty"
+			end
+			local lowered = trimmed:lower()
+			for _, marker in ipairs(DECOMPILER_FAILURE_MARKERS) do
+				if lowered:find(marker, 1, true) then
+					return true, "decompiler reported '" .. marker .. "'"
+				end
+			end
+			-- Anything this short is a placeholder rather than a program.
+			if #trimmed < 16 then
+				return true, "only " .. tostring(#trimmed) .. " bytes returned"
+			end
+			return false, nil
+		end
+
 		--- Layer 2: the executor's own decompiler.
 		local function fromExecutor(record)
 			local decompile = Compat.Get("decompile")
@@ -5191,8 +5247,9 @@ local SECTION7 = {
 			if not ok then
 				return nil, "decompile error: " .. Util.Truncate(tostring(source), 120)
 			end
-			if type(source) ~= "string" or #source == 0 then
-				return nil, "decompile returned no source"
+			local failed, why = looksLikeDecompilerFailure(source)
+			if failed then
+				return nil, "decompile unusable: " .. tostring(why)
 			end
 			return source, nil
 		end
@@ -8327,24 +8384,56 @@ local SECTION10 = {
 				if not getscriptbytecode then
 					return "skipped: getscriptbytecode unavailable"
 				end
+				-- Prefer a script the game authored. PlayerScripts are already
+				-- compiled and protected, so probing one reports a limitation of
+				-- Roblox's own scripts rather than of the parser.
 				local probeScript
+				local probeLabel
 				for _, record in ipairs(Scripts.List) do
-					if record.Viable and record.ClassName == "LocalScript" then
+					if record.Viable and not record.IsCore
+						and (record.ClassName == "ModuleScript"
+							or record.ClassName == "LocalScript") then
 						probeScript = record.Instance
+						probeLabel = record.Path
 						break
 					end
 				end
 				if not probeScript then
-					return "skipped: no client-side LocalScript found to probe"
+					for _, record in ipairs(Scripts.List) do
+						if record.Viable then
+							probeScript = record.Instance
+							probeLabel = record.Path
+							break
+						end
+					end
 				end
-				local ok, bytes = pcall(getscriptbytecode, probeScript)
-				assert(ok and (type(bytes) == "string" or type(bytes) == "buffer"),
-					"bytecode unavailable for " .. probeScript.Name .. ": " .. tostring(bytes))
+				if not probeScript then
+					return "skipped: no viable script found to probe"
+				end
+
+				-- Elevated, because reading bytecode from a protected script may
+				-- need it, and because the failure mode without it is a silent nil
+				-- that looks exactly like an unsupported script.
+				local ok, bytes = pcall(function()
+					return Compat.Elevated(function()
+						return getscriptbytecode(probeScript)
+					end)
+				end)
+				if not ok then
+					return "getscriptbytecode raised on " .. tostring(probeLabel)
+						.. ": " .. Util.Truncate(tostring(bytes), 100)
+				end
+				if bytes == nil then
+					return "FAILED: getscriptbytecode returned nil for "
+						.. tostring(probeLabel)
+						.. "; no bytecode is reachable for this script"
+				end
 				local parsed, reason = Bytecode.Deserialize(bytes)
-				assert(parsed, "parser rejected live bytecode from " .. probeScript.Name .. ": " .. tostring(reason))
+				assert(parsed, "parser rejected bytecode from " .. tostring(probeLabel)
+					.. ": " .. tostring(reason))
 				assert(parsed.ProtoCount >= 1, "no protos parsed")
-				return string.format("bytecode version %d, %d protos, %d bytes",
-					parsed.Version, parsed.ProtoCount, parsed.BytesTotal)
+				return string.format("%s: bytecode version %d, %d protos, %d bytes",
+					tostring(probeLabel), parsed.Version, parsed.ProtoCount, parsed.BytesTotal)
 			end)
 
 			check("number formatting round trips", function()
