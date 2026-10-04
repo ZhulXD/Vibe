@@ -268,7 +268,7 @@ local CORE_MODULES = {
 				return "z:"
 			elseif t == "table" then
 				return "t:" .. tostring(Util.TableId(value))
-			elseif t == "Instance" then
+			elseif Util.IsInstance(value) then
 				return "i:" .. tostring(value:GetDebugId())
 			elseif t == "EnumItem" then
 				return "e:" .. tostring(value.EnumType) .. "." .. tostring(value.Name)
@@ -298,6 +298,27 @@ local CORE_MODULES = {
 			return type(value)
 		end
 
+		--- Whether a value is an Instance.
+		---
+		--- NOT `type(value) == "Instance"`. On Delta, verified by diagnostic,
+		--- `type(game)` returns "userdata" while `typeof(game)` returns
+		--- "Instance". Every Instance test written the naive way silently fails
+		--- there, which made instances invisible to the serialiser, produced
+		--- "unresolvable" paths, and left every document empty while the game ran
+		--- perfectly well. `typeof` is consulted first and `type` is only a
+		--- fallback for environments that lack it.
+		function Util.IsInstance(value)
+			if value == nil then
+				return false
+			end
+			local ok, ty = pcall(typeof, value)
+			if ok and ty ~= nil then
+				return ty == "Instance"
+			end
+			local okType, t = pcall(type, value)
+			return (okType and t == "Instance") or false
+		end
+
 		--- Resolves an enum member without assuming it exists.
 		---
 		--- A hard reference such as `Enum.SurfaceType.Top` is evaluated when the
@@ -325,7 +346,7 @@ local CORE_MODULES = {
 		--- calling GetFullName directly: one destroyed remote was enough to abort
 		--- the entire incoming-capture install.
 		function Util.InstanceLabel(instance)
-			if type(instance) ~= "Instance" then
+			if not Util.IsInstance(instance) then
 				return "?"
 			end
 			local ok, full = pcall(function()
@@ -479,6 +500,7 @@ end
 
 local SECTION2 = {
 	Compat = function()
+		local Util = Req("Util")
 		local Compat = {}
 
 		--- Capability table. Each entry is probed for existence and basic
@@ -699,7 +721,7 @@ local SECTION2 = {
 		--- changes the environment the game is executing in. Doing it only when
 		--- the plain read fails keeps that off the hot path entirely.
 		function Compat.DebugId(instance)
-			if type(instance) ~= "Instance" then
+			if not Util.IsInstance(instance) then
 				return nil
 			end
 			local ok, id = pcall(function()
@@ -718,7 +740,7 @@ local SECTION2 = {
 			if a == b then
 				return true
 			end
-			if type(a) ~= "Instance" or type(b) ~= "Instance" then
+			if not Util.IsInstance(a) or not Util.IsInstance(b) then
 				return false
 			end
 			if Compat.Has("compareinstances") then
@@ -1413,6 +1435,27 @@ local SECTION3 = {
 			elseif t == "thread" then
 				return "coroutine.create(function() end) --[[thread]]"
 			elseif t == "userdata" then
+				-- Instances and EnumItems both report as "userdata" from type()
+				-- on some executors, verified on Delta, so they are identified by
+				-- typeof() here. Falling through to the opaque branch below made
+				-- every instance in every payload render as
+				-- "unserialisable userdata".
+				if Util.IsInstance(value) then
+					if not ctx.opts.UseInstancePaths then
+						return string.format("Instance.new(%s) --[[%s]]",
+							Util.Quote(value.ClassName), Util.InstanceLabel(value))
+					end
+					local ok, path = pcall(Paths.Of, value)
+					if ok and type(path) == "string" then
+						return path
+					end
+					return string.format("Instance.new(%s) --[[unresolvable path: %s]]",
+						Util.Quote(value.ClassName), Util.InstanceLabel(value))
+				end
+				local okEnum, enumType = pcall(typeof, value)
+				if okEnum and enumType == "EnumItem" then
+					return string.format("Enum.%s.%s", tostring(value.EnumType), tostring(value.Name))
+				end
 				local datatype = tryDatatype(value)
 				if datatype then
 					return datatype
@@ -1434,18 +1477,17 @@ local SECTION3 = {
 					hex = hex .. string.format(" ...(+%d bytes)", size - take)
 				end
 				return string.format("buffer.create(%d) --[[hex: %s]]", size, hex)
-			elseif t == "Instance" then
+			elseif Util.IsInstance(value) then
 				if not ctx.opts.UseInstancePaths then
-					return string.format("Instance.new(%s) --[[%s]]", Util.Quote(value.ClassName), Util.Truncate(value:GetFullName(), 100))
+					return string.format("Instance.new(%s) --[[%s]]",
+						Util.Quote(value.ClassName), Util.InstanceLabel(value))
 				end
 				local ok, path = pcall(Paths.Of, value)
 				if ok and type(path) == "string" then
 					return path
 				end
-				return string.format(
-					"Instance.new(%s) --[[unresolvable path: %s]]",
-					Util.Quote(value.ClassName), Util.Truncate(value:GetFullName(), 80)
-				)
+				return string.format("Instance.new(%s) --[[unresolvable path: %s]]",
+					Util.Quote(value.ClassName), Util.InstanceLabel(value))
 			elseif t == "EnumItem" then
 				return string.format("Enum.%s.%s", tostring(value.EnumType), tostring(value.Name))
 			elseif t == "table" then
@@ -1544,16 +1586,26 @@ local SECTION3 = {
 					return "<non-finite>"
 				end
 				return value
-			elseif t == "Instance" then
-				local ok, path = pcall(Paths.Of, value)
-				return {
-					__kind = "Instance",
-					ClassName = value.ClassName,
-					Name = value.Name,
-					Path = ok and path or tostring(value:GetFullName()),
-				}
-			elseif t == "EnumItem" then
-				return { __kind = "EnumItem", Enum = tostring(value.EnumType), Name = tostring(value.Name) }
+			elseif t == "userdata" then
+				-- Instances and EnumItems report as "userdata" here too.
+				if Util.IsInstance(value) then
+					local okPath, path = pcall(Paths.Of, value)
+					return {
+						__kind = "Instance",
+						ClassName = value.ClassName,
+						Name = value.Name,
+						Path = (okPath and path) or Util.InstanceLabel(value),
+					}
+				end
+				local okEnum, enumType = pcall(typeof, value)
+				if okEnum and enumType == "EnumItem" then
+					return { __kind = "EnumItem", Enum = tostring(value.EnumType), Name = tostring(value.Name) }
+				end
+				local datatype = tryDatatype(value)
+				if datatype then
+					return { __kind = Util.TypeName(value), Source = datatype }
+				end
+				return "<userdata>"
 			elseif t == "table" then
 				if seen[value] then
 					return "<cycle>"
@@ -1736,7 +1788,7 @@ end
 		local BuildOf
 
 		function Paths.Of(instance)
-			if type(instance) ~= "Instance" then
+			if not Util.IsInstance(instance) then
 				return "nil"
 			end
 			local cached = Paths.Cache[instance]
@@ -1818,7 +1870,7 @@ end
 		--- Memoised because it is called once per instance by the structure and
 		--- raw dumps, and each call otherwise walks to the root.
 		function Paths.Dotted(instance)
-			if type(instance) ~= "Instance" then
+			if not Util.IsInstance(instance) then
 				return "?"
 			end
 			local cached = Paths.DottedCache[instance]
@@ -2517,7 +2569,7 @@ local SECTION4 = {
 		--- plus the tier that produced it. Errors reading individual properties are
 		--- recorded rather than thrown.
 		function Reflect.PropertiesOf(instance)
-			if type(instance) ~= "Instance" then
+			if not Util.IsInstance(instance) then
 				return {}, "not-an-instance", {}
 			end
 			local cached = Reflect.PropertyCache[instance]
@@ -2618,9 +2670,8 @@ local SECTION4 = {
 				same = math.abs(default.R - value.R) < 1e-6
 					and math.abs(default.G - value.G) < 1e-6
 					and math.abs(default.B - value.B) < 1e-6
-			elseif type(default) == "EnumItem" and type(value) == "EnumItem" then
-				same = default == value
 			else
+				-- Covers EnumItems, which compare by identity, and everything else.
 				same = default == value
 			end
 			return same
@@ -2670,7 +2721,7 @@ local SECTION4 = {
 				return out, false
 			end
 			for _, instance in ipairs(result) do
-				if type(instance) == "Instance" then
+				if Util.IsInstance(instance) then
 					out[#out + 1] = instance
 				end
 			end
@@ -3894,10 +3945,10 @@ local SECTION6 = {
 				else
 					position.FalseCount += 1
 				end
-			elseif type(value) == "EnumItem" then
-				bump(position.EnumValues, tostring(value))
-			elseif type(value) == "Instance" then
+			elseif Util.IsInstance(value) then
 				bump(position.InstanceClasses, value.ClassName)
+			elseif Util.TypeName(value) == "EnumItem" then
+				bump(position.EnumValues, tostring(value))
 			elseif type(value) == "table" then
 				local count = 0
 				for _ in pairs(value) do
@@ -3953,7 +4004,7 @@ local SECTION6 = {
 		end
 
 		function Net.For(instance)
-			if type(instance) ~= "Instance" then
+			if not Util.IsInstance(instance) then
 				return nil
 			end
 			local debugId = Compat.DebugId(instance)
@@ -4074,7 +4125,7 @@ local SECTION6 = {
 
 			-- Caller attribution: this is what links protocol to code.
 			local origin = info.Origin
-			if type(origin) == "Instance" then
+			if Util.IsInstance(origin) then
 				local originDebugId = Compat.DebugId(origin)
 				local originPath = Paths.Dotted(origin)
 				local key = string.format("%s|%s|%s", tostring(originDebugId), method, tostring(info.Line))
@@ -4114,7 +4165,7 @@ local SECTION6 = {
 					direction.Listeners[key] = listener
 				end
 				listener.Count += 1
-				if type(info.Listener) == "Instance" then
+				if Util.IsInstance(info.Listener) then
 					Scripts.RecordIncoming(listenerDebugId, record.DebugId, method)
 				end
 			end
@@ -4125,7 +4176,7 @@ local SECTION6 = {
 				Args = args,
 				Result = info.Result,
 				Error = info.Error,
-				OriginPath = type(origin) == "Instance" and Paths.Dotted(origin) or nil,
+				OriginPath = Util.IsInstance(origin) and Paths.Dotted(origin) or nil,
 				Line = info.Line,
 				IsSweep = synthetic or nil,
 			})
@@ -4234,7 +4285,7 @@ local SECTION6 = {
 				pcall(function()
 					local thread = coroutine.running()
 					local ok, script = pcall(getscriptfromthread, thread)
-					if ok and type(script) == "Instance" then
+					if ok and Util.IsInstance(script) then
 						info.Origin = script
 					end
 				end)
@@ -4242,7 +4293,7 @@ local SECTION6 = {
 			if not info.Origin and getcallingscript then
 				pcall(function()
 					local ok, script = pcall(getcallingscript)
-					if ok and type(script) == "Instance" then
+					if ok and Util.IsInstance(script) then
 						info.Origin = script
 					end
 				end)
@@ -4296,7 +4347,7 @@ local SECTION6 = {
 							local thread = debug.info(level + 1, "t")
 							return thread and getscriptfromthread(thread) or nil
 						end)
-						if okOrigin and type(origin) == "Instance" then
+						if okOrigin and Util.IsInstance(origin) then
 							info.Origin = origin
 							info.SourceName = source
 							local okLine, line = pcall(debug.info, level, "l")
@@ -4321,7 +4372,7 @@ local SECTION6 = {
 			local original = Net.HookMetaMethod(game, "__namecall", function(...)
 				local self = select(1, ...)
 				local okMethod, method = pcall(getnamecallmethod)
-				if okMethod and type(self) == "Instance" and Outgoing.Methods[self.ClassName] == method then
+				if okMethod and Util.IsInstance(self) and Outgoing.Methods[self.ClassName] == method then
 					if not Net.Suppressed() then
 						local packed = table.pack(select(2, ...))
 						local info = attribution()
@@ -4460,7 +4511,7 @@ local SECTION6 = {
 			if getscriptfromthread then
 				pcall(function()
 					local ok, script = pcall(getscriptfromthread, coroutine.running())
-					if ok and type(script) == "Instance" then
+					if ok and Util.IsInstance(script) then
 						info.Origin = script
 					end
 				end)
@@ -4468,7 +4519,7 @@ local SECTION6 = {
 			if not info.Origin and getcallingscript then
 				pcall(function()
 					local ok, script = pcall(getcallingscript)
-					if ok and type(script) == "Instance" then
+					if ok and Util.IsInstance(script) then
 						info.Origin = script
 					end
 				end)
@@ -4497,7 +4548,7 @@ local SECTION6 = {
 					local origin = nil
 					if thread and Compat.Has("getscriptfromthread") then
 						local okOrigin, script = pcall(Compat.Get("getscriptfromthread"), thread)
-						if okOrigin and type(script) == "Instance" then
+						if okOrigin and Util.IsInstance(script) then
 							origin = script
 						end
 					end
@@ -4523,7 +4574,7 @@ local SECTION6 = {
 			local ok, signal = pcall(function()
 				return instance[signalName]
 			end)
-			if not ok or type(signal) ~= "Instance" then
+			if not ok or not Util.IsInstance(signal) then
 				return false, "signal unreadable"
 			end
 
@@ -5121,7 +5172,7 @@ local SECTION7 = {
 		end
 
 		function State.Watch(instance)
-			if type(instance) ~= "Instance" or State.Watched[instance] then
+			if not Util.IsInstance(instance) or State.Watched[instance] then
 				return
 			end
 			State.Watched[instance] = true
@@ -7895,6 +7946,30 @@ local SECTION10 = {
 				local cell = Docs.Md.Cell("Health")
 				assert(cell == "Health", "value cell was altered: " .. cell)
 				return true
+			end)
+
+			check("instance detection works on this executor", function()
+				-- Regression guard. On Delta, type(game) is "userdata" while
+				-- typeof(game) is "Instance", which made every naive
+				-- `type(x) == "Instance"` test fail silently and emptied every
+				-- document. If this check ever fails, Util.IsInstance is broken
+				-- again and nothing downstream can be trusted.
+				if not Util.IsInstance(game) then
+					return "BROKEN: type(game)=" .. tostring(type(game))
+						.. " typeof(game)=" .. tostring(typeof(game))
+				end
+				if not Util.IsInstance(workspace) then
+					return "BROKEN: workspace not detected as an Instance"
+				end
+				local child = game:GetChildren()[1]
+				if child ~= nil and not Util.IsInstance(child) then
+					return "BROKEN: child not detected as an Instance"
+				end
+				local rendered = Ser.Value(child or game, { Prettify = false })
+				if rendered:find("unserialisable", 1, true) then
+					return "BROKEN: an Instance rendered as unserialisable"
+				end
+				return "type(game)=" .. tostring(type(game)) .. ", all Instances detected"
 			end)
 
 			check("service paths resolve", function()
