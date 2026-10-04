@@ -5965,10 +5965,21 @@ local SECTION9 = {
 								classRows[#classRows + 1] = { className, count }
 							end
 							table.sort(classRows, function(a, b) return a[1] < b[1] end)
+							-- Built with explicit loops rather than a comprehension:
+						-- `{ x for x in list }` exists in neither Lua nor Luau.
+							local enumNames = {}
+							for _, row in ipairs(enumRows) do
+								enumNames[#enumNames + 1] = row[1]
+							end
 							local enumText = #enumRows > 0
-								and table.concat({ (row[1]) for row in enumRows }, ", ") or "—"
+								and table.concat(enumNames, ", ") or "—"
+
+							local classNames = {}
+							for _, row in ipairs(classRows) do
+								classNames[#classNames + 1] = row[1]
+							end
 							local classText = #classRows > 0
-								and table.concat({ (row[1]) for row in classRows }, ", ") or "—"
+								and table.concat(classNames, ", ") or "—"
 							rows[#rows + 1] = {
 								position,
 								Md.PositionSummary(data),
