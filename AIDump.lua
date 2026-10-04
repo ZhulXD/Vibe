@@ -6573,8 +6573,7 @@ local SECTION9 = {
 					Report.StructureTruncated.Reason, Report.StructureTruncated.Limit)))
 				L("")
 			end
-			L(Md.Bullet(string.format(
-				"Attribute names created after watching began and never changed are only"))
+			L(Md.Bullet("Attribute names created after watching began and never changed are only"))
 			L(Md.Bullet("discovered at the next export, so a short run can miss them."))
 			L("")
 
