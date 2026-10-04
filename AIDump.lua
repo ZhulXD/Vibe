@@ -910,12 +910,22 @@ local SECTION3 = {
 			if math.floor(n) == n and math.abs(n) < 2^53 then
 				return string.format("%d", n)
 			end
-			local s = string.format("%.14g", n)
-			-- Guarantee the literal still reads back as a float.
-			if not s:find("[%.eE]") then
-				s = s .. ".0"
+			-- Non-integers need the shortest representation that reads back as the
+			-- identical double, which takes up to 17 significant digits. A fixed
+			-- %.14g silently corrupts every value needing more: 1/3 becomes
+			-- 0.33333333333333, which is a *different* double. Verified failing on
+			-- Delta via diagnostic.lua, which round-trips this function's output.
+			for precision = 14, 17 do
+				local text = string.format("%." .. precision .. "g", n)
+				-- Guarantee the literal still reads back as a float.
+				if not text:find("[%.eE]") then
+					text = text .. ".0"
+				end
+				if tonumber(text) == n then
+					return text
+				end
 			end
-			return s
+			return string.format("%.17g", n)
 		end
 		Ser.Number = numberToString
 
@@ -6249,7 +6259,15 @@ local SECTION9 = {
 					record.Disabled and "yes" or "no",
 					record.Decompile or "not attempted",
 					renderList(fires, function(entry)
-						return string.format("%s:%s (%s) x%d", entry[1], entry[2], entry[3], entry[4])
+						-- entry[3] is the line, stringified when the call site was
+						-- recorded. It is the literal string "nil" on executors
+						-- without getcallingline, which is a fact about this run
+						-- and is reported as such rather than printed as a value.
+						local where = entry[3]
+						if where == nil or where == "nil" then
+							where = "line not reported by this executor"
+						end
+						return string.format("%s:%s (%s) x%d", entry[1], entry[2], where, entry[4])
 					end),
 					renderList(listens, function(entry)
 						return string.format("%s:%s x%d", entry[1], entry[2], entry[3])
@@ -6405,7 +6423,7 @@ local SECTION9 = {
 			else
 				table.sort(flowRows, function(a, b) return a[4] > b[4] end)
 				L(Md.Table({
-					"Remote", "Direction", "Pos", "Obs", "Min", "Max", "Mean",
+					"Remote", "Direction", "Pos", "Obs", "Min", "Max", "Mean (4 s.f.)",
 					"Moved up", "Moved down", "Unchanged",
 				}, flowRows, { "---", "---", ":---:", ":---:", "---", "---", "---", ":---:", ":---:", ":---:" }))
 			end
@@ -6574,6 +6592,11 @@ local SECTION9 = {
 			end
 			if not Compat.Has("getcallingscript") then
 				gap("getcallingscript", "call sites cannot be attributed to scripts")
+			end
+			if not Compat.Has("getcallingline") then
+				gap("getcallingline",
+					"call sites are attributed to a script but not to a line number;"
+						.. " 05-SCRIPTS.md records the script only")
 			end
 			if not Reflect.HasMetadata() then
 				gap("ReflectionMetadata.xml",

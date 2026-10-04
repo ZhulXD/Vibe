@@ -385,16 +385,18 @@ else
 	note("loadstring     ABSENT - AIDump's serializer self-test cannot run")
 end
 
--- Mirrors Ser.Number and the serializer's own round-trip check, so the riskiest
--- arithmetic is proven here rather than deep inside AIDump.
-local numbers = { 0, 1, -1, 0.5, 1 / 3, 1e15, 123456789012345 }
+-- Mirrors Ser.Number in AIDump exactly, so this is a live check of the
+-- formatter rather than a stale copy of it. %.14g is not sufficient: a binary64
+-- double needs up to 17 significant digits to round-trip, and 14 corrupts
+-- every value that needs more.
+local numbers = { 0, 1, -1, 0.5, 1 / 3, 1e15, 123456789012345, 2 / 3, 1e-7, math.pi }
 local mismatches = {}
 for _, value in ipairs(numbers) do
 	local text
 	if math.floor(value) == value and math.abs(value) < 2 ^ 53 then
 		text = string.format("%d", value)
 	else
-		text = string.format("%.14g", value)
+		text = string.format("%.17g", value)
 		if not text:find("[%.eE]") then
 			text = text .. ".0"
 		end
@@ -403,14 +405,15 @@ for _, value in ipairs(numbers) do
 		local fn = loadstring("return " .. text)
 		local okBack, back = pcall(fn)
 		if not okBack or back ~= value then
-			mismatches[#mismatches + 1] = text .. " -> " .. tostring(back)
+			mismatches[#mismatches + 1] = tostring(value) .. " -> " .. text
+				.. " -> " .. tostring(back)
 		end
 	else
 		mismatches[#mismatches + 1] = text .. " (unchecked)"
 	end
 end
 if #mismatches == 0 then
-	note("number fmt     all cases round-trip")
+	note("number fmt     all cases round-trip at 17 significant digits")
 else
 	note("number fmt     MISMATCH: " .. table.concat(mismatches, ", "))
 end
@@ -445,8 +448,19 @@ if not WriteFile then
 elseif not filesystemUsable then
 	note("AIDump cannot write files reliably here. Check the filesystem section.")
 elseif lookup("hookmetamethod") and lookup("getnamecallmethod") then
-	note("AIDump should capture traffic in both directions, with call-site")
-	note("attribution, so 05-SCRIPTS.md should carry script paths and line numbers.")
+	note("AIDump should capture traffic in both directions.")
+	if lookup("getcallingscript") or lookup("getscriptfromthread") then
+		note("Call sites can be attributed to a script.")
+	else
+		note("Call sites cannot be attributed to any script.")
+	end
+	if lookup("getcallingline") then
+		note("Call sites can be attributed to a line number, so 05-SCRIPTS.md")
+		note("should carry both script paths and line numbers.")
+	else
+		note("getcallingline is absent, so 05-SCRIPTS.md will carry script paths")
+		note("without line numbers. This is expected and recorded in 07-COVERAGE.md.")
+	end
 elseif lookup("hookfunction") then
 	note("AIDump will run with reduced coverage: outgoing traffic only via prototype")
 	note("methods, and call sites may lack line numbers.")
