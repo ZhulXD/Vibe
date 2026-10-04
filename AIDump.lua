@@ -3067,11 +3067,18 @@ local BYTECODE_MODULES = {
 		-- proto
 		---------------------------------------------------------------------
 
-		local MAX_CODE = 1 << 19
-		local MAX_CONSTANTS = 1 << 17
+		-- Ceilings on the size fields read from a bytecode header. A corrupt or
+		-- hostile header must not be able to turn into an enormous allocation or
+		-- an unbounded loop.
+		--
+		-- Written as explicit powers of two rather than `1 << n`: at least one
+		-- widely used executor's Luau parser rejects the bitwise shift operators,
+		-- and a hard parse failure here would stop the whole file from loading.
+		local MAX_CODE = 524288          -- 2^19
+		local MAX_CONSTANTS = 131072    -- 2^17
 		local MAX_UPVALUES = 255
-		local MAX_PROTOS = 1 << 14
-		local MAX_LOCVARS = 1 << 12
+		local MAX_PROTOS = 16384         -- 2^14
+		local MAX_LOCVARS = 4096         -- 2^12
 		local MAX_DEPTH = 200
 
 		local function readProto(reader, version, depth, state)

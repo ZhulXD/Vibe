@@ -166,6 +166,11 @@ Stated here and in the file header rather than discovered later:
 - **Property coverage** uses executor reflection where available, a
   `ReflectionMetadata.xml` you may place on the filesystem, and finally a
   built-in candidate list. Which tier was used is recorded per instance.
+- **Bitwise shift operators (`<<`, `>>`) are avoided entirely.** At least one
+  executor's Luau parser rejects them, with the confusing message
+  `Expected identifier when parsing expression, got '<'`. Powers of two are
+  written as literals. If AIDump ever fails to load on another executor, check
+  its parser against this list first.
 
 ## Provenance
 
