@@ -1593,6 +1593,7 @@ local SECTION3 = {
 		--- serialisation and would otherwise dominate export time.
 		local Paths = {
 			Cache = setmetatable({}, { __mode = "k" }),
+			DottedCache = setmetatable({}, { __mode = "k" }),
 			NilPreamble = nil,
 			NilNamed = setmetatable({}, { __mode = "k" }),
 		}
@@ -1753,9 +1754,15 @@ end
 
 		--- The dot-path form used in documentation tables. Unlike `Of` this is
 		--- always readable even when it is not evaluable, e.g. `ReplicatedStorage.Net.Buy`.
+		--- Memoised because it is called once per instance by the structure and
+		--- raw dumps, and each call otherwise walks to the root.
 		function Paths.Dotted(instance)
 			if type(instance) ~= "Instance" then
 				return "?"
+			end
+			local cached = Paths.DottedCache[instance]
+			if cached ~= nil then
+				return cached
 			end
 			local parts = {}
 			local cursor = instance
@@ -1766,7 +1773,9 @@ end
 				cursor = cursor.Parent
 			end
 			table.reverse(parts)
-			return table.concat(parts, ".")
+			local built = table.concat(parts, ".")
+			Paths.DottedCache[instance] = built
+			return built
 		end
 
 		function Paths.Clear()
@@ -2251,6 +2260,20 @@ local SECTION4 = {
 			for _ in pairs(classes) do
 				count += 1
 			end
+			if count == 0 then
+				-- The file parsed but yielded nothing usable. This happens when
+				-- some other tool has left a dex/rbx_rmd.dat that is not
+				-- ReflectionMetadata.xml at all. Accepting it silently disabled
+				-- property metadata, so it is rejected and the probe tier is used.
+				Reflect.Source = "none"
+				Reflect.Detail = string.format(
+					"%s parsed but contained 0 classes; not usable as reflection metadata",
+					tostring(path))
+				return false, Reflect.Detail
+			end
+			Reflect.Classes = classes
+			Reflect.Enums = enums
+			Reflect.PropertyOrders = propertyOrders
 			Reflect.Source = "reflectionmetadata-file"
 			Reflect.Detail = string.format("%s (%d classes)", tostring(path), count)
 			return true, Reflect.Detail
@@ -2590,11 +2613,16 @@ local SECTION4 = {
 		---   MaxDepth      hard cap on recursion depth
 		---   IncludeNil    also visit nil-parented instances
 		---   Skip          map of ClassName -> true to exclude
+		---   YieldEvery    yield to the scheduler every N instances (0 = never).
+		---                 Walking tens of thousands of instances makes thousands of
+		---                 engine calls; without this the caller blocks the client
+		---                 for long enough to look like a freeze.
 		--- Returns the flat ordered list plus the counts actually applied.
 		function Scene.Walk(opts)
 			opts = opts or {}
 			local maxInstances = opts.MaxInstances or 50000
 			local maxDepth = opts.MaxDepth or 64
+			local yieldEvery = opts.YieldEvery or 0
 			local skip = opts.Skip or {}
 			local out = {}
 			local counts = {
@@ -2603,7 +2631,9 @@ local SECTION4 = {
 				InstanceLimit = 0,
 				Skipped = 0,
 				NilVisited = 0,
+				Yielded = false,
 			}
+			local sinceYield = 0
 
 			local truncatedInstances = false
 			local truncatedDepth = false
@@ -2619,6 +2649,14 @@ local SECTION4 = {
 				end
 				counts.Visited += 1
 				out[#out + 1] = { Instance = instance, Depth = depth }
+				if yieldEvery > 0 then
+					sinceYield += 1
+					if sinceYield >= yieldEvery then
+						sinceYield = 0
+						counts.Yielded = true
+						task.wait()
+					end
+				end
 				local ok, children = pcall(function()
 					return instance:GetChildren()
 				end)
@@ -2672,7 +2710,7 @@ local SECTION4 = {
 		--- could interact with but a passive observer would never see fire.
 		function Scene.Interactives()
 			local out = { ProximityPrompt = {}, ClickDetector = {}, TouchTransmitter = {} }
-			local list = Scene.Walk({ MaxInstances = 60000, MaxDepth = 96 })
+			local list = Scene.Walk({ MaxInstances = 60000, MaxDepth = 96, YieldEvery = 400 })
 			for _, entry in ipairs(list) do
 				local instance = entry.Instance
 				for className in pairs(out) do
@@ -2686,7 +2724,7 @@ local SECTION4 = {
 
 		function Scene.ClassCensus()
 			local census = {}
-			local list = Scene.Walk({ MaxInstances = 60000, MaxDepth = 96 })
+			local list = Scene.Walk({ MaxInstances = 60000, MaxDepth = 96, YieldEvery = 400 })
 			for _, entry in ipairs(list) do
 				local className = entry.Instance.ClassName
 				census[className] = (census[className] or 0) + 1
@@ -2759,7 +2797,7 @@ local SECTION4 = {
 			table.clear(Scripts.ByPath)
 			Scripts.Counts = { Total = 0, Viable = 0, Decompilable = 0 }
 
-			local list = Scene.Walk({ MaxInstances = 60000, MaxDepth = 96, IncludeNil = true })
+			local list = Scene.Walk({ MaxInstances = 60000, MaxDepth = 96, IncludeNil = true, YieldEvery = 400 })
 			Scripts.WalkCounts = list[2]
 
 			for _, entry in ipairs(list) do
@@ -5510,6 +5548,11 @@ local SECTION9 = {
 			RemotesPerIndex = 0,
 			DetailSamples = 6,
 			DistinctLimit = 8,
+			-- raw/instances.json. Property reads are the expensive part: each one
+			-- is a synchronous engine call, so the number of instances that get
+			-- properties is capped far below the number that get listed.
+			RawInstances = 20000,
+			RawPropertiesForInstances = 4000,
 		}
 		Report.BUDGET = BUDGET
 
@@ -5661,6 +5704,7 @@ local SECTION9 = {
 				MaxInstances = BUDGET.StructureInstances,
 				MaxDepth = BUDGET.StructureDepth,
 				IncludeNil = true,
+				YieldEvery = 400,
 			})
 
 			local propertiesEmitted = 0
@@ -6626,6 +6670,9 @@ local SECTION9 = {
 					walkCounts and walkCounts.TruncatedDepth and "depth budget reached" or "within budget" },
 				{ "Properties per instance", BUDGET.PropertiesPerInstance, BUDGET.PropertiesPerInstance, "cap applied" },
 				{ "Total property emissions", BUDGET.PropertiesTotal, BUDGET.PropertiesTotal, "cap applied" },
+				{ "raw/instances.json instances", BUDGET.RawInstances, BUDGET.RawInstances, "cap applied" },
+				{ "raw/instances.json with properties", BUDGET.RawPropertiesForInstances,
+					BUDGET.RawPropertiesForInstances, "cap applied" },
 			}
 			L(Md.Table({ "Limit", "Configured", "This run", "State" }, limitRows,
 				{ "---", ":---:", ":---:", "---" }))
@@ -6634,6 +6681,12 @@ local SECTION9 = {
 				L(Md.Bullet(string.format(
 					"02-STRUCTURE.md was truncated at the %s budget of %d.",
 					Report.StructureTruncated.Reason, Report.StructureTruncated.Limit)))
+				L("")
+			end
+			if Report.RawPropertiesOmitted and Report.RawPropertiesOmitted > 0 then
+				L(Md.Bullet(string.format(
+					"raw/instances.json lists every instance up to the cap, but properties were read for only the first %d. The remaining %d carry name, class, children and attributes, but no property values.",
+					BUDGET.RawPropertiesForInstances, Report.RawPropertiesOmitted)))
 				L("")
 			end
 			L(Md.Bullet("Attribute names created after watching began and never changed are only"))
@@ -6913,20 +6966,36 @@ local SECTION9 = {
 		end
 
 		function Report.RawInstances()
+			-- Bounded and yielding on purpose. Reading every property of every
+			-- instance in a large place is hundreds of thousands of synchronous
+			-- engine calls; doing that in one frame is what made the client look
+			-- frozen on first attach. Coverage states the caps that applied.
+			local maxInstances = BUDGET.RawInstances
+			local maxWithProperties = BUDGET.RawPropertiesForInstances
 			local list, counts = Scene.Walk({
-				MaxInstances = 20000, MaxDepth = 64, IncludeNil = true,
+				MaxInstances = maxInstances, MaxDepth = 64, IncludeNil = true,
+				YieldEvery = 400,
 			})
 			local payload = {}
+			local withProperties = 0
+			local index = 0
 			for _, entry in ipairs(list) do
+				index += 1
 				local instance = entry.Instance
 				local properties = {}
-				local reflected = Reflect.PropertiesOf(instance)
-				for _, property in ipairs(reflected) do
-					properties[#properties + 1] = {
-						Name = property.Name,
-						Value = property.Value,
-						NonDefault = Reflect.IsDefault(instance.ClassName, property.Name, property.Value),
-					}
+				if withProperties < maxWithProperties then
+					withProperties += 1
+					local reflected = Reflect.PropertiesOf(instance)
+					for _, property in ipairs(reflected) do
+						properties[#properties + 1] = {
+							Name = property.Name,
+							Value = property.Value,
+							NonDefault = Reflect.IsDefault(instance.ClassName, property.Name, property.Value),
+						}
+					end
+					if index % 200 == 0 then
+						task.wait()
+					end
 				end
 				local attributes = {}
 				local ok, attributeMap = pcall(function() return instance:GetAttributes() end)
@@ -6953,6 +7022,7 @@ local SECTION9 = {
 					Children = children,
 				}
 			end
+			Report.RawPropertiesOmitted = math.max(0, counts.Visited - withProperties)
 			return payload, counts
 		end
 
@@ -7316,7 +7386,7 @@ local SECTION10 = {
 		--- designer placed rather than a guessed set of coordinates.
 		function Sweep.Discover()
 			local Scene = Req("Scene")
-			local list = Scene.Walk({ MaxInstances = 40000, MaxDepth = 64 })
+			local list = Scene.Walk({ MaxInstances = 40000, MaxDepth = 64, YieldEvery = 400 })
 			local seen = {}
 			for _, entry in ipairs(list) do
 				local instance = entry.Instance
@@ -7885,6 +7955,10 @@ local SECTION10 = {
 		-- lifecycle
 		---------------------------------------------------------------------
 
+		-- Startup is staged rather than done in one pass. Everything that walks the
+		-- scene or reads many properties yields, and the sweep discovery and the
+		-- first full export are deferred, so attaching costs a few milliseconds
+		-- rather than a visible stall.
 		function Driver.Init()
 			if Driver.Started then
 				return
@@ -7914,65 +7988,88 @@ local SECTION10 = {
 			Store.BeginSession()
 
 			Reflect.Init()
-			Scripts.Scan()
-			Log.Info("scripts:", Scripts.Counts.Total, "found;",
-				Scripts.Counts.Viable, "readable by the client")
-
-			-- Watch state before traffic is installed, so the first calls already
-			-- have a baseline to be compared against.
-			local watched = {}
-			local list = Scene.Walk({ MaxInstances = 40000, MaxDepth = 64 })
-			for _, entry in ipairs(list) do
-				local instance = entry.Instance
-				if State.ValueClasses[instance.ClassName] then
-					watched[#watched + 1] = instance
-				elseif not instance:IsA("BaseScript") and not instance:IsA("Configuration") then
-					local ok, attributes = pcall(function() return instance:GetAttributes() end)
-					if ok and next(attributes) ~= nil then
-						watched[#watched + 1] = instance
-					end
-				end
-			end
-			State.Install(watched)
-
-			Outgoing.Install()
-			Incoming.Install()
-
-			SelfTest.Run()
-			Log.Info("self-test:", SelfTest.Passed, "passed,", SelfTest.Failed, "failed")
-
-			Sweep.Discover()
-			Sweep.Start()
 
 			Driver.Running = true
-			Driver.ExportNow("initial")
-
-			task.spawn(function()
-				while Driver.Running do
-					task.wait(5)
-					if not Driver.Running then
-						break
-					end
-
-					if not Driver.DecompileComplete then
-						task.defer(Driver.DecompileBatch)
-					end
-
-					Driver.ExportCountdown -= 5
-					if Driver.ExportCountdown <= 0 then
-						Driver.ExportCountdown = Driver.ExportIntervalSeconds
-						task.defer(Driver.ExportNow, "scheduled")
-					end
-				end
-			end)
-
 			Driver.InstallEntryPoint()
 			Driver.InstallLifecycleHooks()
 			Driver.BindModuleServices()
 
-			Log.Info("running. Documents are rewritten every",
-				Driver.ExportIntervalSeconds, "s.")
-			Log.Info("output:", Fs.Join(Fs.Root, Store.Session or "?"))
+			task.spawn(function()
+				-- Stage 1: script inventory. Yields inside the walk.
+				Scripts.Scan()
+				Log.Info("scripts:", Scripts.Counts.Total, "found;",
+					Scripts.Counts.Viable, "readable by the client")
+
+				-- Stage 2: state watching. Bounded, because each watched instance
+				-- costs a connection and a rescan on every export.
+				local watched = {}
+				local list = Scene.Walk({ MaxInstances = 20000, MaxDepth = 64, YieldEvery = 500 })
+				local watchedCap = 2000
+				for _, entry in ipairs(list) do
+					local instance = entry.Instance
+					local wanted = false
+					if State.ValueClasses[instance.ClassName] then
+						wanted = true
+					elseif not instance:IsA("BaseScript") and not instance:IsA("Configuration") then
+						local ok, attributes = pcall(function() return instance:GetAttributes() end)
+						if ok and next(attributes) ~= nil then
+							wanted = true
+						end
+					end
+					if wanted then
+						watched[#watched + 1] = instance
+						if #watched >= watchedCap then
+							Log.Info("state: watch cap of", watchedCap, "reached")
+							break
+						end
+					end
+				end
+				State.Install(watched)
+
+				-- Stage 3: capture layers. Cheap, and early, so traffic that
+				-- happens during startup is still observed.
+				Outgoing.Install()
+				Incoming.Install()
+
+				-- Stage 4: self-test.
+				SelfTest.Run()
+				Log.Info("self-test:", SelfTest.Passed, "passed,", SelfTest.Failed, "failed")
+
+				-- Stage 5: a first, light export. Captures what is known so far
+				-- cheaply, so there is a readable document set within seconds.
+				task.wait(1)
+				Driver.ExportNow("initial")
+
+				-- Stage 6: the heavy work, deferred well clear of attach.
+				task.wait(5)
+				Driver.ExportNow("initial-full")
+
+				-- Stage 7: background discovery and looping.
+				Sweep.Discover()
+				Sweep.Start()
+
+				task.spawn(function()
+					while Driver.Running do
+						task.wait(5)
+						if not Driver.Running then
+							break
+						end
+						if not Driver.DecompileComplete then
+							task.defer(Driver.DecompileBatch)
+						end
+						Driver.ExportCountdown -= 5
+						if Driver.ExportCountdown <= 0 then
+							Driver.ExportCountdown = Driver.ExportIntervalSeconds
+							task.defer(Driver.ExportNow, "scheduled")
+						end
+					end
+				end)
+
+				Log.Info("running. Documents are rewritten every",
+					Driver.ExportIntervalSeconds, "s.")
+				Log.Info("output:", Fs.Join(Fs.Root, Store.Session or "?"))
+			end)
+
 			return Driver
 		end
 
