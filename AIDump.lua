@@ -3559,17 +3559,21 @@ local SECTION6 = {
 		local Ser = Req("Ser")
 		local Scripts = Req("Scripts")
 
+-- Counters are named OutgoingCount/IncomingCount rather than Outgoing and
+		-- Incoming: Outgoing and Incoming are also the names of the two capture
+		-- modules, and having the counters occupy those names made a typo like
+		-- `Net.Outgoing.Install()` index the number 0 instead of failing loudly
+		-- at load.
 		local Net = {
 			Records = {},
 			ByDebugId = {},
 			InstalledHooks = {},
 			ObserverConnections = {},
 			Active = false,
-			Incoming = 0,
-			Outgoing = 0,
+			OutgoingCount = 0,
+			IncomingCount = 0,
 			Errors = {},
 			Notes = {},
-			-- Re-entrancy guard: our own reads must never be logged as traffic.
 			Depth = 0,
 		}
 
@@ -3670,8 +3674,8 @@ local SECTION6 = {
 		function Net.Clear()
 			table.clear(Net.Records)
 			table.clear(Net.ByDebugId)
-			Net.Incoming = 0
-			Net.Outgoing = 0
+			Net.IncomingCount = 0
+			Net.OutgoingCount = 0
 			table.clear(Net.Errors)
 			table.clear(Net.Notes)
 		end
@@ -3874,9 +3878,9 @@ local SECTION6 = {
 			record.LastSeen = os.time()
 			direction.Count += 1
 			if directionName == "Outgoing" then
-				Net.Outgoing += 1
+				Net.OutgoingCount += 1
 			else
-				Net.Incoming += 1
+				Net.IncomingCount += 1
 			end
 
 			local method = info.Method or "?"
@@ -5860,8 +5864,8 @@ local SECTION9 = {
 				{ "With observed incoming traffic", census.WithIncoming },
 				{ "With both directions", census.WithBoth },
 				{ "Never observed in either direction", census.Silent },
-				{ "Outgoing calls recorded", Net.Outgoing },
-				{ "Incoming calls recorded", Net.Incoming },
+				{ "Outgoing calls recorded", Net.OutgoingCount },
+				{ "Incoming calls recorded", Net.IncomingCount },
 				{ "Of those, produced by the AIDump sweep", sweepSynthetic },
 			}))
 			L("")
@@ -6710,8 +6714,8 @@ local SECTION9 = {
 				{ "Remotes discovered", census.Total },
 				{ "Remotes with observed traffic", census.WithOutgoing + census.WithIncoming - census.WithBoth },
 				{ "Remotes never observed", census.Silent },
-				{ "Outgoing calls recorded", Net.Outgoing },
-				{ "Incoming calls recorded", Net.Incoming },
+				{ "Outgoing calls recorded", Net.OutgoingCount },
+				{ "Incoming calls recorded", Net.IncomingCount },
 				{ "Scripts found", Scripts.Counts.Total },
 				{ "Scripts readable by the client", Scripts.Counts.Viable },
 				{ "Attributes tracked", countKeys(State.Attributes) },
@@ -7784,6 +7788,11 @@ local SECTION10 = {
 		local Decompile = Req("Decompile")
 		local Store = Req("Store")
 		local Sweep = Req("Sweep")
+		-- Outgoing and Incoming are separate modules, not fields of Net. They are
+		-- resolved here rather than reached through Net so that the two capture
+		-- layers cannot be confused with Net's per-direction call counters.
+		local Outgoing = Req("Outgoing")
+		local Incoming = Req("Incoming")
 		local SelfTest = Req("SelfTest")
 		local Report = Req("Report")
 
@@ -7903,8 +7912,8 @@ local SECTION10 = {
 			end
 			State.Install(watched)
 
-			Net.Outgoing.Install()
-			Net.Incoming.Install()
+			Outgoing.Install()
+			Incoming.Install()
 
 			SelfTest.Run()
 			Log.Info("self-test:", SelfTest.Passed, "passed,", SelfTest.Failed, "failed")
@@ -7948,7 +7957,7 @@ local SECTION10 = {
 			Driver.Running = false
 			Sweep.Stop()
 			pcall(function() Net.Teardown() end)
-			pcall(function() Req("Incoming").Teardown() end)
+			pcall(function() Incoming.Teardown() end)
 			pcall(State.Teardown)
 			pcall(Driver.ExportNow, "shutdown")
 			-- Release the re-entrancy guard so AIDump can be run again.
@@ -7970,8 +7979,8 @@ local SECTION10 = {
 				end,
 				Status = function()
 					local status = Store.Status()
-					status.Outgoing = Net.Outgoing
-					status.Incoming = Net.Incoming
+					status.Outgoing = Net.OutgoingCount
+					status.Incoming = Net.IncomingCount
 					status.Remotes = #Net.Records
 					status.Sweep = Sweep.Report()
 					return status
