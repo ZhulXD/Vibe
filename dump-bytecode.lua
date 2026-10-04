@@ -63,14 +63,51 @@ local function pickTarget()
 	return best
 end
 
-local getbytecode = rawget(_G, "getscriptbytecode")
-if type(getbytecode) ~= "function" then
-	print("RESULT: getscriptbytecode is not available in this environment.")
+--- Resolves an executor global across every environment it might live in.
+---
+--- Reading rawget(_G, name) alone is not enough. The diagnostic and AIDump both
+--- search the chunk environment, getgenv() and _G, because an executor may
+--- install its API in any of them. This file originally read only _G and
+--- consequently reported 'getscriptbytecode is not available' on an executor
+--- where it plainly is.
+local function lookup(name)
+	local environments = {}
+	if type(getfenv) == "function" then
+		for _, level in ipairs({ 1, 2, 0 }) do
+			local ok, env = pcall(getfenv, level)
+			if ok and type(env) == "table" then
+				environments[#environments + 1] = env
+			end
+		end
+	end
+	if type(getgenv) == "function" then
+		local ok, env = pcall(getgenv)
+		if ok and type(env) == "table" then
+			environments[#environments + 1] = env
+		end
+	end
+	if type(_G) == "table" then
+		environments[#environments + 1] = _G
+	end
+	for _, env in ipairs(environments) do
+		local ok, value = pcall(rawget, env, name)
+		if ok and type(value) == "function" then
+			return value
+		end
+	end
+	return nil
+end
+
+local getbytecode = lookup("getscriptbytecode")
+if not getbytecode then
+	print("RESULT: getscriptbytecode was not found in any environment.")
+	print("Environments searched: getfenv(1), getfenv(2), getfenv(0),")
+	print("getgenv(), _G.")
 	return
 end
 
-local setidentity = rawget(_G, "setthreadidentity")
-local getidentity = rawget(_G, "getthreadidentity")
+local setidentity = lookup("setthreadidentity")
+local getidentity = lookup("getthreadidentity")
 
 --- Bytecode may need elevated identity, and the failure without it is a silent
 --- nil that looks identical to an unsupported script.
@@ -186,7 +223,7 @@ local header = string.format(
 	string.byte(chosenBytes, 1) or -1,
 	string.byte(chosenBytes, 2) or -1)
 
-local writefileFn = rawget(_G, "writefile")
+local writefileFn = lookup("writefile")
 if type(writefileFn) ~= "function" then
 	print("RESULT: writefile is unavailable; cannot save the sample.")
 	return

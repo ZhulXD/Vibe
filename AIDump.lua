@@ -298,6 +298,23 @@ local CORE_MODULES = {
 			return type(value)
 		end
 
+		--- Whether a value is something we can connect to a signal on.
+		---
+		--- NOT Util.IsInstance. An RBXScriptSignal is not an Instance: it is its
+		--- own Roblox type. Checking it with the instance predicate rejected all 18
+		--- remotes in the game with 'signal unreadable', which silently disabled
+		--- every bit of incoming capture. The error message named neither the
+		--- property nor the type, so it read as an executor limitation.
+		local function isSignal(value)
+			if value == nil then
+				return false
+			end
+			if Util.IsInstance(value) then
+				return true
+			end
+			return Util.TypeName(value) == "RBXScriptSignal"
+		end
+
 		--- Whether a value is an Instance.
 		---
 		--- NOT `type(value) == "Instance"`. On Delta, verified by diagnostic,
@@ -2603,6 +2620,20 @@ local SECTION4 = {
 			DraggingV1 = true,
 			EnableSLIMAvatars = true,
 			ExpandedTerrain = true,
+			-- Second wave, from the 12:50 run. Almost all DataModel-level flags,
+			-- which fail once per instance read.
+			ExplicitAutoJoints = true,
+			FluidFidelityInternal = true,
+			FluidForces = true,
+			ForceR15 = true,
+			GameAvatarType = true,
+			HistoryId = true,
+			IKControlConstraintSupport = true,
+			ImprovedAnimationConstraint = true,
+			ImprovedPhysicsReplication = true,
+			InertiaMigrated = true,
+			InitialSize = true,
+			IsInSandbox = true,
 		}
 
 		--- Reads that fail are counted, and property reading switches itself off
@@ -4552,7 +4583,10 @@ local SECTION6 = {
 			},
 			NamecallInstalled = false,
 			PrototypeInstalled = {},
-			-- Only used when hookfunction does not work at all.
+			-- Which layer actually saw traffic. A layer that installs but never
+			-- fires is reported rather than left to look like success.
+			NamecallHits = 0,
+			PrototypeHits = 0,
 			AllowNamecallFallback = true,
 		}
 
@@ -4676,6 +4710,7 @@ local SECTION6 = {
 				local okMethod, method = pcall(getnamecallmethod)
 				if okMethod and Util.IsInstance(self) and Outgoing.Methods[self.ClassName] == method then
 					if not Net.Suppressed() then
+						Outgoing.NamecallHits += 1
 						local packed = table.pack(select(2, ...))
 						local info = attribution()
 						if not info.Origin then
@@ -4715,6 +4750,7 @@ local SECTION6 = {
 				local returnsAValue = methodName == "InvokeServer" or methodName == "Invoke"
 				local previous = Net.HookFunction(original, function(...)
 					if not Net.Suppressed() then
+						Outgoing.PrototypeHits += 1
 						local packed = table.pack(...)
 						local info = attributionFromStack(4)
 						info.Args = packed
@@ -4738,29 +4774,43 @@ local SECTION6 = {
 				installed, methodClassCount)
 		end
 
-		-- Prototype-method capture is preferred and is the only layer installed by
-		-- default.
+-- Both capture layers are installed, and each records how many calls it
+		--- attributed.
 		---
-		--- The __namecall metamethod used to be hooked as well. That is a global
-		--- patch on the DataModel: every method call on every object in the game
-		--- routes through it, so the hook ran a pcall and an executor call each
-		--- time. It is also redundant, because hooking the five prototype methods
-		--- captures the same calls with the real method name and full argument
-		--- fidelity and a far smaller blast radius. It is retained only as a
-		--- fallback for an executor where hookfunction does not work.
+		--- Prototype-only was tried first because it is the smaller blast radius,
+		--- but on Delta it reports '5 of 5 hooked' and then records nothing at all:
+		--- hookfunction on a method harvested from a throwaway instance does not
+		--- affect the existing instances. The __namecall layer was removed in the
+		--- belief that it caused engine errors, which was never established — the
+		--- thread-identity elevation it shared that run was the far likelier cause,
+		--- and that has since been fixed. Both are installed so whichever works on
+		--- a given executor does, and the counters say which.
+		---
+		--- The metamethod hook returns immediately for anything that is not one of
+		--- the five remote types, so the added cost on ordinary method calls is one
+		--- type-name comparison.
 		function Outgoing.Install()
 			local prototypeOk, prototypeDetail = Outgoing.InstallPrototypes()
 			if prototypeOk then
-				Log.Info("outgoing: prototype layer active -", prototypeDetail)
+				Log.Info("outgoing: prototype layer installed -", prototypeDetail)
 			else
 				Log.Warn("outgoing: prototype layer unavailable -", prototypeDetail)
-				if Outgoing.AllowNamecallFallback then
-					local namecallOk, namecallDetail = Outgoing.InstallNamecall()
-					if namecallOk then
-						Log.Info("outgoing: __namecall fallback active")
-					else
-						Log.Warn("outgoing: __namecall fallback unavailable -", namecallDetail)
-					end
+			end
+
+			local namecallOk, namecallDetail = Outgoing.InstallNamecall()
+			if namecallOk then
+				Log.Info("outgoing: __namecall layer installed")
+			else
+				Log.Warn("outgoing: __namecall layer unavailable -", namecallDetail)
+			end
+
+			Net.Active = prototypeOk or namecallOk
+			if not Net.Active then
+				Log.Error("outgoing: NO capture layer is available; no remote")
+				Log.Error("outgoing: traffic can be recorded on this executor.")
+			end
+			return Net.Active
+		end
 				else
 					Log.Warn("outgoing: no capture layer available")
 				end
@@ -4877,8 +4927,9 @@ local SECTION6 = {
 			local ok, signal = pcall(function()
 				return instance[signalName]
 			end)
-			if not ok or not Util.IsInstance(signal) then
-				return false, "signal unreadable"
+			if not ok or not isSignal(signal) then
+				return false, "signal unreadable: type() is " .. tostring(type(signal))
+					.. ", typeof() is " .. tostring(Util.TypeName(signal))
 			end
 
 			local observer
@@ -8540,9 +8591,9 @@ local SECTION10 = {
 		-- Outgoing and Incoming are separate modules, not fields of Net. They are
 		-- resolved here rather than reached through Net so that the two capture
 		-- layers cannot be confused with Net's per-direction call counters.
-		local Outgoing = Req("Outgoing")
-		local Incoming = Req("Incoming")
-		local SelfTest = Req("SelfTest")
+local Outgoing = Req("Outgoing")
+			local Incoming = Req("Incoming")
+			local SelfTest = Req("SelfTest")
 		local Report = Req("Report")
 
 		local Driver = {
@@ -8739,6 +8790,9 @@ local SECTION10 = {
 
 				Log.Info("running. Documents are rewritten every",
 					Driver.ExportIntervalSeconds, "s.")
+				Log.Info("outgoing layers: __namecall",
+					Outgoing.NamecallHits, "hit(s), prototype",
+					Outgoing.PrototypeHits, "hit(s)")
 				Log.Info("output:", Fs.Join(Fs.Root, Store.Session or "?"))
 			end)
 
