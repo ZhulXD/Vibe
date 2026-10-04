@@ -3855,6 +3855,94 @@ local BYTECODE_MODULES = {
 			return result
 		end
 
+		--- Extracts only the string table, the one part of the container that can be
+		--- read with confidence.
+		---
+		--- Verified against a real 296-byte sample of
+		--- `ReplicatedStorage.GuiLib.Classes.Children.TextMask.String` taken from
+		--- Delta, bytecode version 13. The layout is
+		--- `version:u8, typesVersion:u8, count:varint, then count entries of
+		--- length:varint followed by that many bytes`. That sample yields exactly
+		--- seven strings — Process, Verify, ToType, String, Name, "" and Default
+		--- — which is precisely the vocabulary such a class uses, and it consumed
+		--- the bytes cleanly.
+		---
+		--- Nothing past the string table is claimed. The full proto layout for
+		--- version 13 is not established, so the instruction stream is not read
+		--- and no operands or control flow are inferred.
+		---
+		--- This partial read is worth having: string literals are the
+		--- highest-value part of a script for understanding mechanics. Remote
+		--- names, prompt text, config keys and UI labels all live there, and none
+		--- of it requires understanding how the code is laid out.
+		function Bytecode.ExtractStrings(bytes)
+			if type(bytes) == "buffer" then
+				bytes = buffer.tostring(bytes)
+			end
+			if type(bytes) ~= "string" then
+				return nil, "bytecode is not a string"
+			end
+			if #bytes < 3 then
+				return nil, "too short to hold a header"
+			end
+
+			local reader = newReader(bytes, 1)
+			local okParse, result = pcall(function()
+				local version = reader:Byte()
+				if version < Bytecode.MIN_VERSION or version > Bytecode.MAX_VERSION then
+					error({ __bytecodeError = true,
+						Message = "bytecode version " .. tostring(version)
+							.. " outside supported range" }, 0)
+				end
+				local typesVersion = (version >= 3) and reader:Byte() or nil
+				local count = reader:VarInt()
+				if count == 0 or count > 4096 then
+					error({ __bytecodeError = true,
+						Message = "implausible string table count " .. tostring(count) }, 0)
+				end
+				local strings = {}
+				for index = 1, count do
+					strings[index] = reader:String()
+				end
+				return {
+					Version = version,
+					TypesVersion = typesVersion,
+					Count = count,
+					Strings = strings,
+					OffsetAfterStrings = reader.Pos - 1,
+					BytesTotal = #bytes,
+				}
+			end)
+			if okParse then
+				return result
+			end
+			if type(result) == "table" and result.__bytecodeError then
+				return nil, result.Message
+			end
+			return nil, Util.Truncate(tostring(result), 120)
+		end
+
+		--- Renders a string table as a fact listing. Nothing here is inferred:
+		--- these are the literal byte sequences the chunk carries.
+		function Bytecode.RenderStrings(extracted)
+			if not extracted then
+				return nil
+			end
+			local out = {}
+			out[#out + 1] = "-- string literals"
+			out[#out + 1] = string.format(
+				"-- %d literal(s) from a bytecode version %d blob of %d bytes.",
+				extracted.Count, extracted.Version, extracted.BytesTotal)
+			out[#out + 1] = "-- The instruction stream was not parsed. These are literals"
+			out[#out + 1] = "-- only: no control flow, no operands, no ordering."
+			out[#out + 1] = ""
+			for index, text in ipairs(extracted.Strings) do
+				out[#out + 1] = string.format("S%-3d %s", index,
+					Util.Quote(Util.Truncate(text, 200)))
+			end
+			return table.concat(out, "\n") .. "\n"
+		end
+
 		function Bytecode.Deserialize(bytes)
 			if type(bytes) ~= "string" then
 				if type(bytes) == "buffer" then
@@ -4811,13 +4899,6 @@ local SECTION6 = {
 			end
 			return Net.Active
 		end
-				else
-					Log.Warn("outgoing: no capture layer available")
-				end
-			end
-			Net.Active = prototypeOk
-			return prototypeOk
-		end
 
 		return Outgoing
 	end,
@@ -5226,6 +5307,7 @@ local SECTION7 = {
 				Executor = 0,
 				Disassembly = 0,
 				BytecodeUnsupported = 0,
+				Strings = 0,
 				NoBytecode = 0,
 				Failed = 0,
 			},
@@ -5351,13 +5433,19 @@ local SECTION7 = {
 
 			local parsed, reason = Bytecode.Deserialize(payload)
 			if not parsed then
-				-- Not a failure: the bytes are still a recordable fact.
+				-- Not a failure, and not nothing. The instruction stream is not
+				-- understood for this bytecode version, but the string table is,
+				-- and it carries the game's literals: remote names, prompt text,
+				-- config keys and UI labels all live there.
+				local extracted, extractReason = Bytecode.ExtractStrings(payload)
 				return {
-					Method = "bytecode-unsupported",
+					Method = "bytecode-strings",
 					Reason = reason,
 					HexDump = Bytecode.HexDump(payload, 4096),
 					BytecodeSize = #payload,
 					BytecodeVersion = string.byte(payload, 1),
+					Strings = extracted,
+					StringsReason = extractReason,
 				}, nil
 			end
 
@@ -5425,19 +5513,31 @@ local SECTION7 = {
 				result.Reason = fromBytes.Reason
 				result.HexDump = fromBytes.HexDump
 				result.Meta = fromBytes.Meta
-				if fromBytes.Disassembly then
+if fromBytes.Disassembly then
 					result.Disassembly = headerFor(record, "bytecode disassembly") .. "\n"
 						.. fromBytes.Disassembly
 					Decompile.Counts.Disassembly += 1
 					record.Decompile = "bytecode-disassembly"
 				else
+					-- No instruction stream available. Emit the literals, which
+					-- are readable, then the raw bytes, which are a fact even when
+					-- the structure is not understood.
+					local rendered = fromBytes.Strings
+						and Bytecode.RenderStrings(fromBytes.Strings)
+						or ("-- string literals could not be read: "
+							.. tostring(fromBytes.StringsReason or "unknown") .. "\n")
 					result.Disassembly = headerFor(
 						record,
-						"raw bytecode (structure not parsed)",
-						string.format("\tBytecode size: %d bytes", fromBytes.BytecodeSize or 0)
-					) .. "\n" .. (fromBytes.HexDump or "")
-					Decompile.Counts.BytecodeUnsupported += 1
-					record.Decompile = "bytecode-unsupported"
+						"raw bytecode: literals and bytes",
+						string.format("\tBytecode size: %d bytes", fromBytes.BytecodeSize or 0))
+						.. "\n" .. rendered .. "\n" .. (fromBytes.HexDump or "")
+					if fromBytes.Strings then
+						Decompile.Counts.Strings += 1
+						record.Decompile = "bytecode-strings"
+					else
+						Decompile.Counts.BytecodeUnsupported += 1
+						record.Decompile = "bytecode-unsupported"
+					end
 				end
 				Decompile.Results[record.Path] = result
 				return result
@@ -6850,7 +6950,9 @@ local SECTION9 = {
 			L(Md.Bullet("`source`: the script's own Source property was readable."))
 			L(Md.Bullet("`executor-decompile`: the executor's decompile() succeeded."))
 			L(Md.Bullet("`bytecode-disassembly`: bytecode parsed and disassembled."))
-			L(Md.Bullet("`bytecode-unsupported`: bytecode obtained but not parsed; raw hex written."))
+			L(Md.Bullet("`bytecode-strings`: the instruction stream was not parsed, but the"))
+			L(Md.Bullet("string literals were. The file lists those literals and the raw bytes."))
+			L(Md.Bullet("`bytecode-unsupported`: bytecode was obtained but nothing could be read from it."))
 			L(Md.Bullet("`no-bytecode`: no bytecode available for this script."))
 			L("")
 
@@ -7337,12 +7439,25 @@ local SECTION9 = {
 					}
 				end
 			end
-			L(Md.Heading(2, string.format("Scripts without usable source (%d)", #decompileGaps)))
+			L(Md.Heading(2, string.format("Scripts without readable source (%d)", #decompileGaps)))
 			L("")
 			if #decompileGaps == 0 then
 				L("Every client-side script produced some output.")
 			else
 				L(Md.Table({ "Script", "State", "Recorded reason" }, decompileGaps))
+				L("")
+				local stringsOnly = 0
+				for _, record in ipairs(Scripts.List) do
+					if record.Decompile == "bytecode-strings" then
+						stringsOnly += 1
+					end
+				end
+				if stringsOnly > 0 then
+					L(Md.Bullet(string.format(
+						"%d of these produced readable string literals even though the instruction stream was not parsed.",
+						stringsOnly)))
+					L("")
+				end
 			end
 			L("")
 
