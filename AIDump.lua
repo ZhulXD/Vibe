@@ -298,6 +298,25 @@ local CORE_MODULES = {
 			return type(value)
 		end
 
+		--- Resolves an enum member without assuming it exists.
+		---
+		--- A hard reference such as `Enum.SurfaceType.Top` is evaluated when the
+		--- enclosing chunk loads, so a member that this client does not have is a
+		--- load-time error that takes down the entire module — which is exactly
+		--- what happened on first run, where `Top` was not a member of
+		--- Enum.SurfaceType. Referring only by name and returning nil when absent
+		--- degrades the affected entry to "default unknown", which the reports
+		--- already handle.
+		function Util.EnumMember(enumTypeName, memberName)
+			local ok, item = pcall(function()
+				return Enum[enumTypeName][memberName]
+			end)
+			if ok then
+				return item
+			end
+			return nil
+		end
+
 		--- Escapes a string for inclusion in a Luau double-quoted literal.
 		local ESCAPES = {
 			["\\"] = "\\\\",
@@ -1989,11 +2008,13 @@ local SECTION4 = {
 				BasePart = {
 					Anchored = false, CanCollide = true, CanQuery = true,
 					CanTouch = true, Transparency = 0, Locked = false,
-					Material = Enum.Material.Plastic, Name = "Part",
+					Material = Util.EnumMember("Material", "Plastic"), Name = "Part",
 					RootPriority = 0, Size = Vector3.new(4, 1, 2),
-					TopSurface = Enum.SurfaceType.Top, BottomSurface = Enum.SurfaceType.Bottom,
+					TopSurface = Util.EnumMember("SurfaceType", "Top"),
+					BottomSurface = Util.EnumMember("SurfaceType", "Bottom"),
 				},
-				Part = { Shape = Enum.PartType.Block, FormFactor = Enum.FormFactor.Custom },
+				Part = { Shape = Util.EnumMember("PartType", "Block"),
+					FormFactor = Util.EnumMember("FormFactor", "Custom") },
 				Model = { Name = "Model" },
 				Folder = { Name = "Folder" },
 				Configuration = { Name = "Configuration" },
@@ -2011,8 +2032,10 @@ local SECTION4 = {
 				Vector3Value = { Name = "Vector3Value", Value = Vector3.new(0, 0, 0) },
 				Color3Value = { Name = "Color3Value", Value = Color3.new(0, 0, 0) },
 				NumberRangeValue = { Name = "NumberRangeValue" },
-				Script = { Name = "Script", Disabled = false, RunContext = Enum.RunContext.Legacy },
-				LocalScript = { Name = "LocalScript", Disabled = false, RunContext = Enum.RunContext.Client },
+				Script = { Name = "Script", Disabled = false,
+					RunContext = Util.EnumMember("RunContext", "Legacy") },
+				LocalScript = { Name = "LocalScript", Disabled = false,
+					RunContext = Util.EnumMember("RunContext", "Client") },
 				ModuleScript = { Name = "ModuleScript", Disabled = false },
 				Frame = {
 					Name = "Frame", Active = false, AnchorPoint = Vector2.new(0, 0),
@@ -2044,7 +2067,7 @@ local SECTION4 = {
 				},
 				ProximityPrompt = {
 					ActionText = "Proximity", Enabled = true, HoldDuration = 0,
-					KeyboardKeyCode = Enum.KeyCode.E, MaxActivationDistance = 10,
+					KeyboardKeyCode = Util.EnumMember("KeyCode", "E"), MaxActivationDistance = 10,
 					ObjectText = "", RequiresLineOfSight = true,
 				},
 				ClickDetector = { Name = "ClickDetector", MaxActivationDistance = 10 },
@@ -2698,11 +2721,24 @@ local SECTION4 = {
 			if not ok then
 				return false, "RunContext unreadable"
 			end
-			if runContext == Enum.RunContext.Client then
+			-- Resolved by name so a client that names these differently, or lacks
+			-- them, cannot turn a comparison into a hard error at scan time.
+			local RUNCONTEXT_CLIENT = Util.EnumMember("RunContext", "Client")
+			local RUNCONTEXT_LEGACY = Util.EnumMember("RunContext", "Legacy")
+
+			if RUNCONTEXT_CLIENT and runContext == RUNCONTEXT_CLIENT then
 				return true, nil
 			end
-			if instance.ClassName == "LocalScript" and runContext == Enum.RunContext.Legacy then
+			if RUNCONTEXT_LEGACY and instance.ClassName == "LocalScript"
+				and runContext == RUNCONTEXT_LEGACY then
 				return true, nil
+			end
+			if not RUNCONTEXT_CLIENT then
+				-- Without a known client RunContext, a LocalScript is the best
+				-- available evidence that a script is client-side.
+				if instance.ClassName == "LocalScript" then
+					return true, nil
+				end
 			end
 			return false, "RunContext is not client"
 		end
@@ -7565,7 +7601,7 @@ local SECTION10 = {
 					Position = CFrame.new(1, 2, 3, 0, 0, 90),
 					Scale = UDim2.new(0, 10, 1, 20),
 					Range = NumberRange.new(1, 5),
-					Enumerated = Enum.Material.Neon,
+					Enumerated = Util.EnumMember("Material", "Neon"),
 					Nested = { "a", "b", Inner = { 1, 2, 3 } },
 				}
 				fixture.Self = fixture
