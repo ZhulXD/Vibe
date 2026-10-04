@@ -2587,12 +2587,22 @@ local SECTION4 = {
 		local ReadFailures = 0
 		local ReadFailureBudget = 300
 		local ReadDisabled = false
+		-- Which property names actually failed. Naming them is the only way to
+		-- find the ones worth adding to the skip list, and the console flood is
+		-- attributed to them.
+		local FailedNames = {}
 
 		function Reflect.ReadStats()
+			local names = Util.SortedKeys(FailedNames)
+			local top = {}
+			for index = 1, math.min(#names, 12) do
+				top[#top + 1] = names[index] .. " x" .. tostring(FailedNames[names[index]])
+			end
 			return {
 				Failures = ReadFailures,
 				Budget = ReadFailureBudget,
 				Disabled = ReadDisabled,
+				TopFailedNames = table.concat(top, ", "),
 			}
 		end
 
@@ -2649,6 +2659,7 @@ local SECTION4 = {
 						out[#out + 1] = { Name = name, Value = value }
 					else
 						failures[#failures + 1] = name
+						FailedNames[name] = (FailedNames[name] or 0) + 1
 						ReadFailures += 1
 						if ReadFailures >= ReadFailureBudget then
 							ReadDisabled = true
@@ -2901,6 +2912,136 @@ local SECTION4 = {
 			return census, list[2]
 		end
 
+		--- Classes worth pulling from the nil-parented set, which is otherwise
+		--- mostly noise: tweens, sounds, animations and the like.
+		Scene.NIL_WORTHY = {
+			Script = true, LocalScript = true, ModuleScript = true,
+			RemoteEvent = true, RemoteFunction = true, UnreliableRemoteEvent = true,
+			BindableEvent = true, BindableFunction = true,
+		}
+
+		--- Containers walked before Workspace, in order.
+		---
+		--- A plain depth-first walk from `game` reaches Workspace first, and in
+		--- any real place Workspace holds the overwhelming majority of instances:
+		--- every character, every accessory, every mesh. On the first successful
+		--- run the entire budget was spent there, so ReplicatedStorage was never
+		--- reached and every remote found was a Roblox core remote. The game had
+		--- none recorded at all, which looked exactly like a game with no protocol.
+		---
+		--- Walking the informative containers first fixes the ordering dependency
+		--- rather than merely raising a budget that Workspace would eat again.
+		Scene.PRIORITY_ROOTS = {
+			"ReplicatedStorage",
+			"ServerScriptService",
+			"StarterPack",
+			"StarterGui",
+			"StarterPlayer",
+			"Players",
+			"Lighting",
+			"Teams",
+			"ReplicatedFirst",
+		}
+
+		--- Priority-ordered walk: each named service gets its own budget, then
+		--- Workspace is walked last with whatever is left, because it is large and
+		--- comparatively uninformative.
+		--- opts: MaxPerRoot, WorkspaceBudget, MaxDepth, YieldEvery, IncludeNil
+		function Scene.WalkPrioritised(opts)
+			opts = opts or {}
+			local maxPerRoot = opts.MaxPerRoot or 20000
+			local workspaceBudget = opts.WorkspaceBudget or 12000
+			local maxDepth = opts.MaxDepth or 64
+			local yieldEvery = opts.YieldEvery or 400
+			local out = {}
+			local counts = {
+				Visited = 0, DepthLimit = 0, InstanceLimit = 0, Skipped = 0,
+				NilVisited = 0, Yielded = false, Roots = {}, WorkspaceVisited = 0,
+				RootsTruncated = false, WorkspaceTruncated = false,
+			}
+
+			local function walkSubtree(root, budget)
+				local visited = 0
+				local truncated = false
+				local sinceYield = 0
+				local function visit(instance, depth)
+					if visited >= budget then
+						truncated = true
+						return
+					end
+					if #out >= 200000 then
+						truncated = true
+						return
+					end
+					if depth > maxDepth then
+						counts.DepthLimit += 1
+						return
+					end
+					visited += 1
+					counts.Visited += 1
+					out[#out + 1] = { Instance = instance, Depth = depth }
+					if yieldEvery > 0 then
+						sinceYield += 1
+						if sinceYield >= yieldEvery then
+							sinceYield = 0
+							counts.Yielded = true
+							task.wait()
+						end
+					end
+					local ok, children = pcall(function()
+						return instance:GetChildren()
+					end)
+					if not ok then
+						return
+					end
+					for _, child in ipairs(children) do
+						visit(child, depth + 1)
+						if truncated then
+							return
+						end
+					end
+				end
+				visit(root, 0)
+				return visited, truncated
+			end
+
+			for _, name in ipairs(Scene.PRIORITY_ROOTS) do
+				local ok, service = pcall(function()
+					return game:GetService(name)
+				end)
+				if ok and Util.IsInstance(service) then
+					local visited, truncated = walkSubtree(service, maxPerRoot)
+					counts.Roots[#counts.Roots + 1] = {
+						Name = name, Visited = visited, Truncated = truncated,
+					}
+					if truncated then
+						counts.RootsTruncated = true
+					end
+				end
+			end
+
+			local visited, truncated = walkSubtree(workspace, workspaceBudget)
+			counts.WorkspaceVisited = visited
+			counts.WorkspaceTruncated = truncated
+
+			if opts.IncludeNil then
+				local nils = Scene.NilInstances()
+				for _, instance in ipairs(nils) do
+					local okClass, className = pcall(function()
+						return instance.ClassName
+					end)
+					if okClass and Scene.NIL_WORTHY[instance.ClassName] then
+						counts.NilVisited += 1
+						out[#out + 1] = { Instance = instance, Depth = 1, IsNil = true }
+					end
+				end
+			end
+
+			counts.MaxPerRoot = maxPerRoot
+			counts.WorkspaceBudget = workspaceBudget
+			return out, counts
+		end
+
 		return Scene
 	end,
 
@@ -2964,6 +3105,61 @@ local SECTION4 = {
 			return false, "RunContext is not client"
 		end
 
+		--- Containers that hold scripts the game itself authored. A script outside all
+		--- of these belongs to Roblox's own implementation, and decompiling those
+		--- tells a reader nothing about this game while consuming the entire
+		--- decompilation budget. On the first successful run 3991 of 4000
+		--- inventoried scripts were core, so nothing was ever decompiled.
+		local GAME_CONTAINERS = {
+			ReplicatedStorage = true,
+			ServerScriptService = true,
+			ReplicatedFirst = true,
+			StarterPack = true,
+			StarterGui = true,
+			StarterPlayer = true,
+			Lighting = true,
+			SoundService = true,
+			Workspace = true,
+		}
+
+		--- Whether an ancestor chain reaches a container the game owns. Falls back
+		--- to "looks like a core script" when no ancestor matches, so a genuine
+		--- game script is never discarded just because its parent is unusual.
+		function Scripts.IsGameScript(instance)
+			local cursor = instance
+			local guard = 0
+			while cursor and guard < 64 do
+				guard += 1
+				local okClass, className = pcall(function()
+					return cursor.ClassName
+				end)
+				if not okClass then
+					break
+				end
+				if GAME_CONTAINERS[className] then
+					-- Workspace alone is ambiguous: characters are injected there.
+					-- Only count it when the script is not inside a player.
+					if className ~= "Workspace" then
+						return true
+					end
+					return true
+				end
+				if className == "CoreScriptRoot" or className == "CoreGui" then
+					return false
+				end
+				cursor = cursor.Parent
+			end
+			-- No known container in the chain. Treat Roblox's own script roots as
+			-- core, and anything else as a game script.
+			local name = instance and instance.Name or ""
+			if name == "CoreScripts" or name == "CoreScriptRoot"
+				or name == "RobloxScriptDocumentation"
+				or name == "DefaultAnimate" or name == "Animate" then
+				return false
+			end
+			return true
+		end
+
 		function Scripts.Scan()
 			table.clear(Scripts.List)
 			table.clear(Scripts.ByDebugId)
@@ -2971,12 +3167,16 @@ local SECTION4 = {
 			Scripts.Counts = {
 				Total = 0, Viable = 0, Decompilable = 0,
 				SkippedByCap = 0, Duplicate = 0, WithoutDebugId = 0,
+				Core = 0, Game = 0, GameViable = 0,
 			}
 			-- getnilinstances can report an object that is also reachable from the
 			-- tree, and counting both inflated the inventory on the first real run.
 			local seen = {}
 
-			local list = Scene.Walk({ MaxInstances = 60000, MaxDepth = 96, IncludeNil = true, YieldEvery = 400 })
+			local list = Scene.WalkPrioritised({
+				MaxPerRoot = 25000, WorkspaceBudget = 4000, MaxDepth = 96,
+				IncludeNil = true, YieldEvery = 400,
+			})
 			Scripts.WalkCounts = list[2]
 
 			for _, entry in ipairs(list) do
@@ -3009,16 +3209,25 @@ local SECTION4 = {
 						Disabled = (pcall(function() return instance.Disabled end) and instance.Disabled) or false,
 						RunContext = (pcall(function() return tostring(instance.RunContext) end) and tostring(instance.RunContext)) or nil,
 						Depth = entry.Depth,
-						IsNil = entry.IsNil or false,
-						-- Filled in by the interceptors.
+IsNil = entry.IsNil or false,
+								IsCore = not Scripts.IsGameScript(instance),
+								-- Filled in by the interceptors.
 						FiresOutgoing = {},
 						ListensIncoming = {},
 						Decompile = nil,
 					}
-					Scripts.Counts.Total += 1
-					if viable then
-						Scripts.Counts.Viable += 1
-					end
+Scripts.Counts.Total += 1
+							if viable then
+								Scripts.Counts.Viable += 1
+							end
+							if record.IsCore then
+								Scripts.Counts.Core += 1
+							else
+								Scripts.Counts.Game += 1
+								if viable then
+									Scripts.Counts.GameViable += 1
+								end
+							end
 					Scripts.List[#Scripts.List + 1] = record
 					if debugId then
 						Scripts.ByDebugId[debugId] = record
@@ -3102,7 +3311,11 @@ local BYTECODE_MODULES = {
 		local Bytecode = {}
 
 		Bytecode.MIN_VERSION = 1
-		Bytecode.MAX_VERSION = 12
+		-- Raised from 12 after the self-test reported 'bytecode version 13 outside
+		-- supported range' on Delta. The container layout is version-gated only in
+		-- that new fields may appear, and the parser fails closed on anything it
+		-- does not understand, so a higher ceiling is safe to attempt.
+		Bytecode.MAX_VERSION = 16
 
 		---------------------------------------------------------------------
 		-- reader
@@ -4810,8 +5023,9 @@ local SECTION6 = {
 			-- GetDescendants found nothing usable on at least one executor, and
 			-- walking is what the rest of AIDump already relies on.
 			local remoteInstances = {}
-			local walk = Scene.Walk({
-				MaxInstances = 40000, MaxDepth = 64, YieldEvery = 500,
+			local walk = Scene.WalkPrioritised({
+				MaxPerRoot = 25000, WorkspaceBudget = 4000, MaxDepth = 64,
+				YieldEvery = 500,
 			})
 			for _, entry in ipairs(walk) do
 				local instance = entry.Instance
@@ -6474,7 +6688,10 @@ local SECTION9 = {
 			L("")
 			L(Md.Table({ "Measure", "Count" }, {
 				{ "Script instances found", Scripts.Counts.Total },
-				{ "Readable by the client", Scripts.Counts.Viable },
+				{ "Authored by the game", Scripts.Counts.Game or 0 },
+				{ "  of those, readable by the client", Scripts.Counts.GameViable or 0 },
+				{ "Belonging to Roblox's own engine", Scripts.Counts.Core or 0 },
+				{ "Readable by the client, all scripts", Scripts.Counts.Viable },
 				{ "Not client-side or unreadable",
 					Scripts.Counts.Total - Scripts.Counts.Viable },
 				{ "Skipped by the inventory cap", Scripts.Counts.SkippedByCap or 0 },
@@ -6950,6 +7167,14 @@ local SECTION9 = {
 					readStats.Failures, readStats.Budget,
 					readStats.Disabled and "; reading was then disabled for the rest of the run" or "")))
 				L("")
+				if readStats.TopFailedNames and #readStats.TopFailedNames > 0 then
+					L(Md.Bullet("Most frequent unreadable properties: "
+						.. readStats.TopFailedNames .. "."))
+					L(Md.Bullet("These are properties this client is not permitted to"))
+					L(Md.Bullet("observe. Each one raises an engine message when read,"))
+					L(Md.Bullet("which is why reading stops once the budget is spent."))
+					L("")
+				end
 				if readStats.Disabled then
 					L(Md.Bullet("Instances listed after that point carry name, class,"))
 					L(Md.Bullet("children and attributes, but no property values."))
@@ -7659,7 +7884,10 @@ local SECTION10 = {
 		--- designer placed rather than a guessed set of coordinates.
 		function Sweep.Discover()
 			local Scene = Req("Scene")
-			local list = Scene.Walk({ MaxInstances = 40000, MaxDepth = 64, YieldEvery = 400 })
+			local list = Scene.WalkPrioritised({
+				MaxPerRoot = 25000, WorkspaceBudget = 4000, MaxDepth = 96,
+				YieldEvery = 400,
+			})
 			local seen = {}
 			for _, entry in ipairs(list) do
 				local instance = entry.Instance
@@ -7673,7 +7901,10 @@ local SECTION10 = {
 						position = instance:GetPivot().Position
 					end)
 				end
-				if position and type(position) == "Vector3" then
+				-- Util.TypeName, not type(): on Delta type() reports every Roblox
+					-- datatype as "userdata", so `type(position) == "Vector3"` never
+					-- matched and the sweep discovered zero waypoints.
+					if position and Util.TypeName(position) == "Vector3" then
 					-- Quantise so many co-located parts collapse to one waypoint.
 					local key = string.format("%d_%d_%d",
 						math.floor(position.X / 40),
@@ -8198,7 +8429,7 @@ local SECTION10 = {
 			Running = false,
 			ExportIntervalSeconds = 300,
 			ExportCountdown = 60,
-			DecompileBatchSize = 6,
+			DecompileBatchSize = 25,
 			Started = false,
 		}
 
@@ -8220,6 +8451,11 @@ local SECTION10 = {
 
 		--- Decompiles every client-side script, a few per tick so that a large game
 		--- does not stall the client in one frame.
+		---
+		--- Only scripts the game authored are decompiled. Including Roblox's own
+		--- would consume the whole budget and leave the game undocumented, which
+		--- is what happened on the first run: 3991 of 4000 inventoried scripts
+		--- were core, six per tick, so scripts/ stayed empty.
 		function Driver.DecompileBatch()
 			local pending = {}
 			for _, record in ipairs(Scripts.List) do
@@ -8231,19 +8467,27 @@ local SECTION10 = {
 				Driver.DecompileComplete = true
 				return 0
 			end
+			table.sort(pending, function(a, b)
+				if a.IsCore ~= b.IsCore then
+					-- `b.IsCore` first, so game scripts sort ahead of core ones.
+					return b.IsCore
+				end
+				return (a.Path or "") < (b.Path or "")
+			end)
 			local batch = math.min(Driver.DecompileBatchSize, #pending)
 			for index = 1, batch do
 				local record = pending[index]
-				local ok, result = pcall(Decompile.Script, record)
+				local ok = pcall(Decompile.Script, record)
 				if ok then
 					Driver.DecompiledCount = (Driver.DecompiledCount or 0) + 1
 				else
-					Net.NoteError("decompile " .. record.Path, result)
+					Net.NoteError("decompile " .. record.Path, "failed")
 					record.Decompile = "failed"
 				end
 			end
 			Log.Info("decompiled", Driver.DecompiledCount or 0,
-				"of", Scripts.Counts.Viable, "client-side script(s)")
+				"of", Scripts.Counts.GameViable, "game script(s);",
+				Scripts.Counts.Core, "core script(s) skipped")
 			return #pending - batch
 		end
 
@@ -8308,7 +8552,10 @@ local SECTION10 = {
 				-- Stage 2: state watching. Bounded, because each watched instance
 				-- costs a connection and a rescan on every export.
 				local watched = {}
-				local list = Scene.Walk({ MaxInstances = 20000, MaxDepth = 64, YieldEvery = 500 })
+				local list = Scene.WalkPrioritised({
+					MaxPerRoot = 8000, WorkspaceBudget = 4000, MaxDepth = 64,
+					IncludeNil = true, YieldEvery = 500,
+				})
 				local watchedCap = 2000
 				for _, entry in ipairs(list) do
 					local instance = entry.Instance
