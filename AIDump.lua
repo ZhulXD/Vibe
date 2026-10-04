@@ -496,10 +496,59 @@ local SECTION2 = {
 		local AVAILABLE = {}
 		local REPORT = {}
 
+		--- Resolves an executor global by name.
+		---
+		--- This deliberately does not read `_G` alone. Executors differ in where
+		--- they install their API: some put it in the shared `_G`, some expose it
+		--- only through `getgenv()`, and some inject it into the environment of the
+		--- chunk being executed. Reading only one of those makes every capability
+		--- look absent on the executors that use a different one, which presents as
+		--- the script silently doing nothing. All sources are consulted instead,
+		--- cheapest first.
+		local ENVIRONMENTS = nil
+
+		local function environments()
+			if ENVIRONMENTS then
+				return ENVIRONMENTS
+			end
+			ENVIRONMENTS = {}
+			-- The environment of the chunk this factory is running inside. This is
+			-- the one that matters for executors which inject per-execution.
+			if typeof(getfenv) == "function" then
+				for _, level in ipairs({ 1, 2, 0 }) do
+					local ok, env = pcall(getfenv, level)
+					if ok and type(env) == "table" then
+						ENVIRONMENTS[#ENVIRONMENTS + 1] = env
+					end
+				end
+			end
+			if typeof(getgenv) == "function" then
+				local ok, env = pcall(getgenv)
+				if ok and type(env) == "table" then
+					ENVIRONMENTS[#ENVIRONMENTS + 1] = env
+				end
+			end
+			if type(_G) == "table" then
+				ENVIRONMENTS[#ENVIRONMENTS + 1] = _G
+			end
+			return ENVIRONMENTS
+		end
+
+		local function lookup(name)
+			for _, env in ipairs(environments()) do
+				local ok, value = pcall(rawget, env, name)
+				if ok and value ~= nil then
+					return value
+				end
+			end
+			return nil
+		end
+		Compat.Lookup = lookup
+
 		--- Probes are structural only: existence, plus a behaviour check for the
 		--- few capabilities where existence is not evidence of function.
 		local function probe(entry)
-			local raw = rawget(_G, entry.Name)
+			local raw = lookup(entry.Name)
 			if type(raw) ~= "function" then
 				-- Some executors expose aliases; accept the common spellings.
 				local ALIASES = {
@@ -517,7 +566,7 @@ local SECTION2 = {
 					isfile = { "is_file" },
 				}
 				for _, alias in ipairs(ALIASES[entry.Name] or {}) do
-					local candidate = rawget(_G, alias)
+					local candidate = lookup(alias)
 					if type(candidate) == "function" then
 						AVAILABLE[entry.Name] = candidate
 						return true, "available as '" .. alias .. "'"
@@ -6465,7 +6514,8 @@ local SECTION9 = {
 				gap("run_on_actor / getactors",
 					"parallel-Luau actor instances, if any, were not instrumented")
 			end
-			gap("getcallingscript", "call sites cannot be attributed to scripts")
+			if not Compat.Has("getcallingscript") then
+				gap("getcallingscript", "call sites cannot be attributed to scripts")
 			end
 			if not Reflect.HasMetadata() then
 				gap("ReflectionMetadata.xml",
@@ -7693,7 +7743,10 @@ local SECTION10 = {
 		}
 
 		local function fatal(message)
-			Log.Error(message)
+			-- Both channels are used because executors differ in which one they
+			-- surface. `warn` reaches the F9 console on some, `print` on others.
+			pcall(print, "[AIDump][FATAL] " .. tostring(message))
+			pcall(warn, "[AIDump][FATAL] " .. tostring(message))
 			-- A notification is not a UI: it is the only channel available when
 			-- the script cannot write the file that would explain the problem.
 			pcall(function()
@@ -7756,8 +7809,19 @@ local SECTION10 = {
 			Compat.Init()
 
 			if not Fs.Available() then
+				local report = Compat.Report()
+				local found = {}
+				for _, name in ipairs({ "writefile", "makefolder", "readfile", "appendfile", "delfile" }) do
+					local entry = report[name]
+					found[#found + 1] = string.format("%s=%s", name,
+						entry and entry.Detail or "not probed")
+				end
 				fatal("AIDump cannot run: this executor exposes no writable filesystem. "
-					.. "Nothing can be recorded without one.")
+					.. "Probed " .. table.concat(found, ", ") .. ". Nothing can be recorded "
+					.. "without one.")
+				if typeof(getgenv) == "function" then
+					getgenv().AIDumpRunning = nil
+				end
 				return
 			end
 
@@ -7923,6 +7987,13 @@ end
 	execution, which is the correct behaviour for a tool attached this way.
 ]]
 
+-- Printed before anything else is attempted. If this line does not appear, the
+-- chunk never compiled, so nothing in the file ran and no amount of reading the
+-- generated documents will help. If it does appear, the failure is a runtime one
+-- and the messages that follow say where.
+pcall(print, "[AIDump] loaded, attaching...")
+pcall(warn, "[AIDump] loaded, attaching...")
+
 local Running = (typeof(getgenv) == "function") and getgenv().AIDumpRunning or nil
 
 if Running then
@@ -7944,7 +8015,9 @@ if not bootOk then
 	if typeof(getgenv) == "function" then
 		getgenv().AIDumpRunning = nil
 	end
-	print("[AIDump] failed to start: " .. tostring(bootError))
+	local detail = "[AIDump] failed to start: " .. tostring(bootError)
+	pcall(print, detail)
+	pcall(warn, detail)
 	pcall(function()
 		game:GetService("StarterGui"):SetCore("SendNotification", {
 			Title = "AIDump",

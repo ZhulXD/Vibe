@@ -109,6 +109,45 @@ many checks passed, and in particular whether the bytecode parser handled real
 bytecode from your client. If it reports failures, the dump is still produced,
 and `07-COVERAGE.md` will name exactly what was lost.
 
+## If nothing happens
+
+AIDump prints its first line before it does anything else:
+
+```
+[AIDump] loaded, attaching...
+```
+
+Which of these you see tells you where the problem is.
+
+**No output at all** means the chunk never compiled. Nothing in the file ran, so
+there is no log to read and no document to find. Look in the *executor's own*
+output window rather than the Roblox console (F9) — many executors swallow a
+compile error and show nothing. To confirm your executor can report errors at
+all, paste this first:
+
+```lua
+print("probe: print works")
+warn("probe: warn works")
+error("probe: this line should appear as an error")
+```
+
+If that error does not show up in the executor's output window, the executor is
+hiding errors and any compile failure in AIDump will be invisible too.
+
+**`loaded, attaching...` then nothing** means it compiled and failed at runtime.
+The next line is the error; both `print` and `warn` are used so it appears in
+whichever channel your executor surfaces.
+
+**`FATAL ... no writable filesystem`** means the executor's `writefile` was not
+found. The message lists each filesystem function it probed and where. AIDump
+searches the chunk's own environment, `getgenv()` and the real `_G`, so this
+only fires when none of the three has it — some stripped or mobile executors
+provide no filesystem at all, and AIDump cannot produce files there.
+
+**It runs but no documents appear** — check the executor's file browser at
+`AIDump/<PlaceId>_<timestamp>/`. Exports run on a timer; the first one is written
+during startup.
+
 ## Known limits
 
 Stated here and in the file header rather than discovered later:
