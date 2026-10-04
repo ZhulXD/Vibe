@@ -8198,7 +8198,7 @@ local SECTION10 = {
 			Running = false,
 			ExportIntervalSeconds = 300,
 			ExportCountdown = 60,
-			DecompileBatch = 6,
+			DecompileBatchSize = 6,
 			Started = false,
 		}
 
@@ -8231,7 +8231,7 @@ local SECTION10 = {
 				Driver.DecompileComplete = true
 				return 0
 			end
-			local batch = math.min(Driver.DecompileBatch, #pending)
+			local batch = math.min(Driver.DecompileBatchSize, #pending)
 			for index = 1, batch do
 				local record = pending[index]
 				local ok, result = pcall(Decompile.Script, record)
