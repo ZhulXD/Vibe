@@ -4176,6 +4176,8 @@ local SECTION6 = {
 			},
 			NamecallInstalled = false,
 			PrototypeInstalled = {},
+			-- Only used when hookfunction does not work at all.
+			AllowNamecallFallback = true,
 		}
 
 		--- The prototype methods to hook, keyed by class name rather than by method
@@ -4360,21 +4362,35 @@ local SECTION6 = {
 				installed, methodClassCount)
 		end
 
+		-- Prototype-method capture is preferred and is the only layer installed by
+		-- default.
+		---
+		--- The __namecall metamethod used to be hooked as well. That is a global
+		--- patch on the DataModel: every method call on every object in the game
+		--- routes through it, so the hook ran a pcall and an executor call each
+		--- time. It is also redundant, because hooking the five prototype methods
+		--- captures the same calls with the real method name and full argument
+		--- fidelity and a far smaller blast radius. It is retained only as a
+		--- fallback for an executor where hookfunction does not work.
 		function Outgoing.Install()
-			local namecallOk, namecallDetail = Outgoing.InstallNamecall()
-			if namecallOk then
-				Log.Info("outgoing: __namecall layer active")
-			else
-				Log.Warn("outgoing: __namecall layer unavailable -", namecallDetail)
-			end
 			local prototypeOk, prototypeDetail = Outgoing.InstallPrototypes()
 			if prototypeOk then
 				Log.Info("outgoing: prototype layer active -", prototypeDetail)
 			else
 				Log.Warn("outgoing: prototype layer unavailable -", prototypeDetail)
+				if Outgoing.AllowNamecallFallback then
+					local namecallOk, namecallDetail = Outgoing.InstallNamecall()
+					if namecallOk then
+						Log.Info("outgoing: __namecall fallback active")
+					else
+						Log.Warn("outgoing: __namecall fallback unavailable -", namecallDetail)
+					end
+				else
+					Log.Warn("outgoing: no capture layer available")
+				end
 			end
-			Net.Active = namecallOk or prototypeOk
-			return Net.Active
+			Net.Active = prototypeOk
+			return prototypeOk
 		end
 
 		return Outgoing
@@ -4412,7 +4428,6 @@ local SECTION6 = {
 			Tracked = {},
 			ObserverCount = 0,
 			DetourCount = 0,
-			NewIndexInstalled = false,
 		}
 
 		local function attributes()
@@ -4609,35 +4624,20 @@ local SECTION6 = {
 		end
 
 		---------------------------------------------------------------------
-		-- layer 3: assignment hook
-		---------------------------------------------------------------------
-
-		function Incoming.InstallAssignmentHook()
-			local getnamecallmethod = Compat.Get("getnamecallmethod")
-			if not getnamecallmethod then
-				return false, "getnamecallmethod unavailable"
-			end
-			local original = Net.HookMetaMethod(game, "__newindex", function(self, key, value)
-				if type(self) == "Instance" and type(key) == "string"
-					and Incoming.Callbacks[self.ClassName] == key
-					and type(value) == "function" then
-					-- The game is installing a fresh handler. Record it as a
-					-- listener, then let the assignment proceed untouched.
-					pcall(function()
-						local info = attributes()
-						Net.Note("callback-assigned",
-							string.format("%s.%s", self.ClassName, key),
-							info.Origin and Util.InstanceLabel(info.Origin) or "origin unknown")
-					end)
-				end
-				return original(self, key, value)
-			end)
-			if not original then
-				return false, "assignment hook failed"
-			end
-			Incoming.NewIndexInstalled = true
-			return true
-		end
+-- NOTE: there is deliberately no layer 3 here.
+			--
+			-- Watching for OnClientInvoke assignment was tried and removed. It
+			-- required patching a C metamethod on the DataModel, which every
+			-- property assignment on the DataModel passes through, and all it
+			-- bought was one informational log line saying a handler had been
+			-- assigned. The detours above already capture those handlers.
+			--
+			-- While it was installed, core client modules were reporting
+			-- 'attempt to call a nil value' in RbxCharacterSounds, ControlModule,
+			-- ClassicCamera and RenderStepEarlyFunctions callbacks. Reducing how
+			-- many global metamethods AIDump patches is the cheapest way to find
+			-- out whether it was responsible, and a working game matters more than
+			-- a log line.
 
 		---------------------------------------------------------------------
 		-- tracking
@@ -4711,11 +4711,6 @@ local SECTION6 = {
 				end
 			end)
 			Incoming.DescendantConnection = connection
-
-			local assignmentOk, assignmentDetail = Incoming.InstallAssignmentHook()
-			if not assignmentOk then
-				Log.Warn("incoming: assignment hook unavailable -", assignmentDetail)
-			end
 
 			Log.Info("incoming: tracked", tracked, "remote(s); observers",
 				Incoming.ObserverCount, "detours", Incoming.DetourCount)
