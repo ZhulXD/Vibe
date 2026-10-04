@@ -2558,12 +2558,43 @@ local SECTION4 = {
 			return names
 		end
 
-		--- Properties that must never be read: they are either enormous,
-		--- self-referential, or have side effects when read.
+		--- Properties that must never be read.
+		---
+		--- Three reasons to skip: the value is enormous or self-referential, reading
+		--- it has side effects, or the engine forbids it on a client.
+		---
+		--- The third group matters most. Reading a server-only property does not
+		--- merely fail quietly under pcall: the engine also writes the reason to
+		--- the console. Across tens of thousands of instances that produced a
+		--- flood of 'PrivateServerId cannot be checked on the client' messages and
+		--- was the main cause of the lag. A property the client cannot observe is
+		--- also not a fact this tool is entitled to document, so it is excluded on
+		--- principle rather than only for cost.
 		local SKIP = {
-			Source = true, AttributesSerialize = true, CurrentCamera = true,
+			Source = true,
+			AttributesSerialize = true,
+			CurrentCamera = true,
 			Tags = false,
+			PrivateServerId = true,
+			PrivateServerOwnerId = true,
+			RobloxLocked = true,
+			CreatorType = false,
 		}
+
+		--- Reads that fail are counted, and property reading switches itself off
+		--- once the failure budget is spent. A game with properties nobody
+		--- predicted would otherwise spam the console for the whole session.
+		local ReadFailures = 0
+		local ReadFailureBudget = 300
+		local ReadDisabled = false
+
+		function Reflect.ReadStats()
+			return {
+				Failures = ReadFailures,
+				Budget = ReadFailureBudget,
+				Disabled = ReadDisabled,
+			}
+		end
 
 		--- Returns an ordered array of { Name, Value, Readable } for an instance,
 		--- plus the tier that produced it. Errors reading individual properties are
@@ -2598,6 +2629,15 @@ local SECTION4 = {
 				names = namesFromCandidates(instance)
 			end
 
+			-- Property reading switches itself off once the failure budget is
+			-- spent. Every unreadable property costs an engine error message in
+			-- the console, and that noise is itself expensive enough to make the
+			-- game unplayable. Bounding it is better than guessing at more names.
+			if ReadDisabled then
+				Reflect.PropertyCache[instance] = { {}, "disabled", {} }
+				return {}, "disabled", {}
+			end
+
 			local out = {}
 			local failures = {}
 			for _, name in ipairs(names) do
@@ -2609,6 +2649,15 @@ local SECTION4 = {
 						out[#out + 1] = { Name = name, Value = value }
 					else
 						failures[#failures + 1] = name
+						ReadFailures += 1
+						if ReadFailures >= ReadFailureBudget then
+							ReadDisabled = true
+							Log.Warn("reflect: property reading disabled after",
+								ReadFailures, "failed reads; 02-STRUCTURE.md and")
+							Log.Warn("reflect: raw/instances.json will list instances")
+							Log.Warn("reflect: without property values from here on.")
+							break
+						end
 					end
 				end
 			end
@@ -4475,6 +4524,7 @@ local SECTION6 = {
 		local Compat = Req("Compat")
 		local Log = Req("Log")
 		local Net = Req("Net")
+		local Scene = Req("Scene")
 
 		--- Incoming capture, in three independently useful layers:
 		---
@@ -4743,29 +4793,49 @@ local SECTION6 = {
 
 		function Incoming.Install()
 			local tracked, failed = 0, {}
-			local getdescendants = game.GetDescendants
-			local okAll, all = pcall(getdescendants, game)
-			if okAll then
-				local function trackSafely(instance)
+			local saw = 0
+			local byClass = {}
+
+			local function trackSafely(instance)
 				-- pcall here because Track touches signals and properties on an
 				-- instance that may already have been destroyed.
-				local ok, tracked, detail = pcall(Incoming.Track, instance)
+				local ok, wasTracked, detail = pcall(Incoming.Track, instance)
 				if not ok then
-					return false, "raised: " .. Util.Truncate(tostring(tracked), 100)
+					return false, "raised: " .. Util.Truncate(tostring(wasTracked), 100)
 				end
-				return tracked, detail
+				return wasTracked, detail
 			end
 
-			for _, instance in ipairs(all) do
-					if Net.RemoteClasses[instance.ClassName] then
-						local ok, detail = trackSafely(instance)
-						if ok then
-							tracked += 1
-						else
-							failed[#failed + 1] = string.format("%s (%s)",
-								Util.InstanceLabel(instance), tostring(detail))
-						end
-					end
+			-- Remotes are gathered with Scene.Walk rather than game:GetDescendants().
+			-- GetDescendants found nothing usable on at least one executor, and
+			-- walking is what the rest of AIDump already relies on.
+			local remoteInstances = {}
+			local walk = Scene.Walk({
+				MaxInstances = 40000, MaxDepth = 64, YieldEvery = 500,
+			})
+			for _, entry in ipairs(walk) do
+				local instance = entry.Instance
+				if Net.RemoteClasses[instance.ClassName] then
+					saw += 1
+					byClass[instance.ClassName] = (byClass[instance.ClassName] or 0) + 1
+					remoteInstances[#remoteInstances + 1] = instance
+				end
+			end
+
+			local classSummary = {}
+			for _, className in ipairs(Util.SortedKeys(byClass)) do
+				classSummary[#classSummary + 1] = className .. "=" .. tostring(byClass[className])
+			end
+			Log.Info("incoming: found", saw, "remote instance(s) in the scene:",
+				table.concat(classSummary, " "))
+
+			for _, instance in ipairs(remoteInstances) do
+				local ok, detail = trackSafely(instance)
+				if ok then
+					tracked += 1
+				else
+					failed[#failed + 1] = string.format("%s (%s)",
+						Util.InstanceLabel(instance), tostring(detail))
 				end
 			end
 
@@ -6872,6 +6942,19 @@ local SECTION9 = {
 					"02-STRUCTURE.md was truncated at the %s budget of %d.",
 					Report.StructureTruncated.Reason, Report.StructureTruncated.Limit)))
 				L("")
+			end
+			local readStats = Reflect.ReadStats()
+			if readStats.Disabled or readStats.Failures > 0 then
+				L(Md.Bullet(string.format(
+					"Property reads failed %d time(s) against a budget of %d%s.",
+					readStats.Failures, readStats.Budget,
+					readStats.Disabled and "; reading was then disabled for the rest of the run" or "")))
+				L("")
+				if readStats.Disabled then
+					L(Md.Bullet("Instances listed after that point carry name, class,"))
+					L(Md.Bullet("children and attributes, but no property values."))
+					L("")
+				end
 			end
 			if Report.RawPropertiesOmitted and Report.RawPropertiesOmitted > 0 then
 				L(Md.Bullet(string.format(
