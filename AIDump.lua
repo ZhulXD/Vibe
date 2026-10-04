@@ -4228,6 +4228,68 @@ local SECTION6 = {
 		-- hook installation
 		---------------------------------------------------------------------
 
+		--- Confirms the environment still works after a hook install.
+		---
+		--- This exists because hookmetamethod(game, "__namecall", ...) turned out to
+		--- be DESTRUCTIVE on Delta. Installing it left the DataModel unable to
+		--- resolve globals or services: typeof became nil, GetService returned
+		--- nothing, and the game filled with 'attempt to call a nil value' in
+		--- PlayerModule.CameraModule, ReplicatedStorage.DrawCamera and others.
+		--- The self-test caught it, but only after the game had already broken.
+		---
+		--- So the environment is checked immediately after every hook install and
+		--- the hooks are removed again at once if it is damaged. A broken game with
+		--- no documentation is strictly worse than a working game with less
+		--- documentation, and the cost of finding out is the user's session.
+		function Net.VerifyEnvironment()
+			local problems = {}
+
+			local okTypeof, result = pcall(function()
+				return typeof(game)
+			end)
+			if not okTypeof then
+				problems[#problems + 1] = "typeof(game) raised: " .. tostring(result)
+			elseif type(result) ~= "string" then
+				problems[#problems + 1] = "typeof(game) returned " .. type(result)
+					.. "; globals are not resolving"
+			end
+
+			local okService, service = pcall(function()
+				return game:GetService("HttpService")
+			end)
+			if not okService then
+				problems[#problems + 1] = "GetService raised: " .. tostring(service)
+			elseif not Util.IsInstance(service) then
+				problems[#problems + 1] = "GetService returned " .. type(service)
+			end
+
+			local okChildren = pcall(function()
+				return game:GetChildren()
+			end)
+			if not okChildren then
+				problems[#problems + 1] = "GetChildren on the DataModel raised"
+			end
+
+			return #problems == 0, problems
+		end
+
+		--- Runs an installer, then verifies the environment and undoes every hook
+		--- if the install damaged it. Returns ok, detail.
+		function Net.GuardedInstall(label, installer)
+			local ok, detail = installer()
+			if not ok then
+				return false, detail
+			end
+			local healthy, problems = Net.VerifyEnvironment()
+			if not healthy then
+				Net.Teardown()
+				return false, label .. " damaged the client environment: "
+					.. table.concat(problems, "; ")
+					.. ". All hooks have been removed."
+			end
+			return true, detail
+		end
+
 		function Net.HookMetaMethod(object, methodName, replacement)
 			local hookmetamethod = Compat.Get("hookmetamethod")
 			if not hookmetamethod then
@@ -4862,40 +4924,45 @@ local SECTION6 = {
 				installed, methodClassCount)
 		end
 
--- Both capture layers are installed, and each records how many calls it
-		--- attributed.
+-- Only the prototype layer is installed.
 		---
-		--- Prototype-only was tried first because it is the smaller blast radius,
-		--- but on Delta it reports '5 of 5 hooked' and then records nothing at all:
-		--- hookfunction on a method harvested from a throwaway instance does not
-		--- affect the existing instances. The __namecall layer was removed in the
-		--- belief that it caused engine errors, which was never established — the
-		--- thread-identity elevation it shared that run was the far likelier cause,
-		--- and that has since been fixed. Both are installed so whichever works on
-		--- a given executor does, and the counters say which.
+		--- The __namecall metamethod was tried three times. It is the hook that
+		--- works in principle, and it is also the one that breaks this client:
+		--- installing it leaves the DataModel unable to resolve globals or
+		--- services, typeof becomes nil, GetService returns nothing, and the game
+		--- fills with 'attempt to call a nil value' in PlayerModule.CameraModule,
+		--- ReplicatedStorage.DrawCamera and others, then lags and freezes.
+		--- Verified against the 14:16 run, where the self-test caught the damage
+		--- after the fact.
 		---
-		--- The metamethod hook returns immediately for anything that is not one of
-		--- the five remote types, so the added cost on ordinary method calls is one
-		--- type-name comparison.
+		--- So it stays off. The install path is wrapped in Net.GuardedInstall, so
+		--- if a hook does turn out to be destructive on some other executor it is
+		--- detected immediately and removed rather than left running.
+		---
+		--- Consequence, stated plainly: on an executor where hookfunction does not
+		--- reach existing instances, outgoing traffic is NOT captured. Incoming is
+		--- captured by connecting to signals, which needs no hook at all and is
+		--- unaffected. 07-COVERAGE.md reports the gap.
 		function Outgoing.Install()
-			local prototypeOk, prototypeDetail = Outgoing.InstallPrototypes()
+			local prototypeOk, prototypeDetail = Net.GuardedInstall(
+				"the prototype-method hook",
+				Outgoing.InstallPrototypes)
 			if prototypeOk then
 				Log.Info("outgoing: prototype layer installed -", prototypeDetail)
 			else
 				Log.Warn("outgoing: prototype layer unavailable -", prototypeDetail)
 			end
 
-			local namecallOk, namecallDetail = Outgoing.InstallNamecall()
-			if namecallOk then
-				Log.Info("outgoing: __namecall layer installed")
-			else
-				Log.Warn("outgoing: __namecall layer unavailable -", namecallDetail)
+			-- Deliberately not installed. Left in place so the reasoning and the
+			-- evidence are in the file rather than only in a commit message.
+			if Outgoing.AllowNamecallFallback then
+				Log.Info("outgoing: __namecall layer disabled; it damages this client")
 			end
 
-			Net.Active = prototypeOk or namecallOk
+			Net.Active = prototypeOk
 			if not Net.Active then
-				Log.Error("outgoing: NO capture layer is available; no remote")
-				Log.Error("outgoing: traffic can be recorded on this executor.")
+				Log.Warn("outgoing: no outgoing capture layer is available;")
+				Log.Warn("outgoing: remote calls fired by the game will not be recorded.")
 			end
 			return Net.Active
 		end
@@ -5248,6 +5315,43 @@ local SECTION6 = {
 				Log.Warn("incoming: untracked -", table.concat(failed, ", "))
 			end
 			return tracked > 0
+		end
+
+		--- Retries tracking remotes that were not present when Install ran.
+		---
+		--- AIDump can attach before the place has finished loading, and one run
+		--- found zero remotes for exactly that reason. DescendantAdded covers
+		--- instances created later, but not ones that already existed and were
+		--- simply not reached by the walk, so this is called periodically too.
+		function Incoming.Rescan()
+			local added = 0
+			local seen = {}
+			for instance in pairs(Incoming.Tracked) do
+				seen[instance] = true
+			end
+			local ok, list = pcall(function()
+				return Scene.WalkPrioritised({
+					MaxPerRoot = 20000, WorkspaceBudget = 3000, MaxDepth = 64,
+					YieldEvery = 500,
+				})
+			end)
+			if not ok then
+				return 0, "walk failed: " .. Util.Truncate(tostring(list), 120)
+			end
+			for _, entry in ipairs(list) do
+				local instance = entry.Instance
+				if Net.RemoteClasses[instance.ClassName] and not seen[instance] then
+					local tracked = trackSafely(instance)
+					if tracked then
+						added += 1
+					end
+				end
+			end
+			if added > 0 then
+				Log.Info("incoming: rescan tracked", added, "additional remote(s);",
+					#Incoming.Tracked, "total")
+			end
+			return added
 		end
 
 		--- Removes every observation AIDump added. Observer connections are
@@ -7349,6 +7453,11 @@ local SECTION9 = {
 			if not Compat.Has("getcallingscript") then
 				gap("getcallingscript", "call sites cannot be attributed to scripts")
 			end
+			if not Net.Active then
+				gap("outgoing capture",
+					"no working hook for the five remote methods on this executor, so calls"
+						.. " the game fires are not recorded; incoming traffic is unaffected")
+			end
 			if not Compat.Has("getcallingline") then
 				gap("getcallingline",
 					"call sites are attributed to a script but not to a line number;"
@@ -8886,14 +8995,22 @@ local Outgoing = Req("Outgoing")
 				Sweep.Discover()
 				Sweep.Start()
 
-				task.spawn(function()
-					while Driver.Running do
+task.spawn(function()
+				local RescanCountdown = 45
+				while Driver.Running do
 						task.wait(5)
 						if not Driver.Running then
 							break
 						end
 						if not Driver.DecompileComplete then
 							task.defer(Driver.DecompileBatch)
+						end
+						-- Remotes may appear after attach, or be missed by the first
+						-- walk if the place was still loading. Retry periodically.
+						RescanCountdown -= 5
+						if RescanCountdown <= 0 then
+							RescanCountdown = 45
+							task.defer(Req("Incoming").Rescan)
 						end
 						Driver.ExportCountdown -= 5
 						if Driver.ExportCountdown <= 0 then
