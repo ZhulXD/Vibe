@@ -317,6 +317,34 @@ local CORE_MODULES = {
 			return nil
 		end
 
+		--- A label for an instance that is always safe to call.
+		---
+		--- Instances can be destroyed between being enumerated and being
+		--- described, and a destroyed instance refuses most method calls. Every
+		--- caller in a loop over descendants must go through this rather than
+		--- calling GetFullName directly: one destroyed remote was enough to abort
+		--- the entire incoming-capture install.
+		function Util.InstanceLabel(instance)
+			if type(instance) ~= "Instance" then
+				return "?"
+			end
+			local ok, full = pcall(function()
+				return instance:GetFullName()
+			end)
+			if ok and type(full) == "string" and #full > 0 then
+				return full
+			end
+			local okName, name = pcall(function()
+				return instance.Name
+			end)
+			local okClass, className = pcall(function()
+				return instance.ClassName
+			end)
+			name = okName and tostring(name) or "?"
+			className = okClass and tostring(className) or "?"
+			return string.format("%s(%s, destroyed)", name, className)
+		end
+
 		--- Escapes a string for inclusion in a Luau double-quoted literal.
 		local ESCAPES = {
 			["\\"] = "\\\\",
@@ -664,9 +692,21 @@ local SECTION2 = {
 		end
 
 		--- Stable per-instance identity for tables keyed by Instance.
+		---
+		--- Tried without privilege first, on purpose. This is called on every
+		--- captured remote call, including from inside the game's own
+		--- OnClientInvoke callback, and raising the thread identity mid-callback
+		--- changes the environment the game is executing in. Doing it only when
+		--- the plain read fails keeps that off the hot path entirely.
 		function Compat.DebugId(instance)
 			if type(instance) ~= "Instance" then
 				return nil
+			end
+			local ok, id = pcall(function()
+				return instance:GetDebugId()
+			end)
+			if ok and id ~= nil then
+				return id
 			end
 			return Compat.Elevated(function()
 				return instance:GetDebugId()
@@ -1691,6 +1731,10 @@ end
 			return Paths.NilPreamble
 		end
 
+		--- Forward declaration. Lua's `local function` cannot take a qualified name,
+		--- so the real implementation is assigned after Paths.Of below.
+		local BuildOf
+
 		function Paths.Of(instance)
 			if type(instance) ~= "Instance" then
 				return "nil"
@@ -1699,7 +1743,22 @@ end
 			if cached ~= nil then
 				return cached
 			end
+			-- Exceptions here are contained rather than propagated. A remote
+			-- destroyed between enumeration and description must not abort the
+			-- caller, which may be building a per-remote record for every remote
+			-- in the place.
+			local ok, built = pcall(Paths.BuildOf, instance)
+			if not ok then
+				local className = "?"
+				pcall(function() className = instance.ClassName end)
+				built = string.format("Instance.new(%s) --[[unresolvable: %s]]",
+					Util.Quote(className), Util.Truncate(tostring(built), 60))
+			end
+			Paths.Cache[instance] = built
+			return built
+		end
 
+		BuildOf = function(instance)
 			-- Walk upward collecting segments until we hit a known anchor.
 			local segments = {}
 			local cursor = instance
@@ -1746,6 +1805,8 @@ end
 			return out
 		end
 
+		Paths.BuildOf = BuildOf
+
 		--- Whether an instance will need the GetNil prelude to be reconstructed.
 		function Paths.NeedsNilPreamble(instance)
 			local out = Paths.Of(instance)
@@ -1764,16 +1825,24 @@ end
 			if cached ~= nil then
 				return cached
 			end
-			local parts = {}
-			local cursor = instance
-			local guard = 0
-			while cursor and guard < 256 do
-				guard += 1
-				parts[#parts + 1] = cursor.Name
-				cursor = cursor.Parent
+			-- Contained for the same reason as Paths.Of: callers include
+			-- Net.For, which runs for every remote, and instances can be
+			-- destroyed at any point during a session.
+			local ok, built = pcall(function()
+				local parts = {}
+				local cursor = instance
+				local guard = 0
+				while cursor and guard < 256 do
+					guard += 1
+					parts[#parts + 1] = cursor.Name
+					cursor = cursor.Parent
+				end
+				table.reverse(parts)
+				return table.concat(parts, ".")
+			end)
+			if not ok then
+				return Util.InstanceLabel(instance)
 			end
-			table.reverse(parts)
-			local built = table.concat(parts, ".")
 			Paths.DottedCache[instance] = built
 			return built
 		end
@@ -4109,8 +4178,10 @@ local SECTION6 = {
 			PrototypeInstalled = {},
 		}
 
-		--- The five prototype methods, harvested from throwaway instances so we
-		--- never need to look them up on a live remote.
+		--- The prototype methods to hook, keyed by class name rather than by method
+		--- name. RemoteEvent and UnreliableRemoteEvent both expose FireServer, so
+		--- keying by method name made one silently overwrite the other and only
+		--- four of the five were ever hooked.
 		local function prototypeMethods()
 			local methods = {}
 			for className, methodName in pairs(Outgoing.Methods) do
@@ -4120,7 +4191,7 @@ local SECTION6 = {
 						return instance[methodName]
 					end)
 					if okMethod and type(fn) == "function" then
-						methods[methodName] = fn
+						methods[className] = { Method = methodName, Function = fn }
 					end
 					pcall(function() instance:Destroy() end)
 				end
@@ -4175,10 +4246,16 @@ local SECTION6 = {
 		--- Depth above our own frames varies with which layer fired and whether
 		--- alternate hooks are in use, so the stack is walked until it leaves our
 		--- own source and the first plausible script frame is taken.
+		---
+		--- The bound is deliberately small. This runs on the game's own remote
+		--- calls, so every level inspected is latency added to the game; a remote
+		--- that fires from its own script resolves in a few frames. When nothing
+		--- resolves, the call is still recorded without attribution, which the
+		--- documents state rather than hiding.
 		local function attributionFromStack(baseLevel)
 			local info = {}
 			local level = baseLevel
-			while level <= 24 do
+			while level <= baseLevel + 6 do
 				local okSource, source = pcall(debug.info, level, "s")
 				if not okSource then
 					break
@@ -4250,7 +4327,14 @@ local SECTION6 = {
 				return false, "hookfunction unavailable"
 			end
 			local installed = 0
-			for methodName, original in pairs(prototypeMethods()) do
+			local methodClassCount = 0
+			for _ in pairs(Outgoing.Methods) do
+				methodClassCount += 1
+			end
+			for className, entry in pairs(prototypeMethods()) do
+				local methodName = entry.Method
+				local original = entry.Function
+				local returnsAValue = methodName == "InvokeServer" or methodName == "Invoke"
 				local previous = Net.HookFunction(original, function(...)
 					if not Net.Suppressed() then
 						local packed = table.pack(...)
@@ -4262,17 +4346,18 @@ local SECTION6 = {
 							Net.NoteError("outgoing prototype", err)
 						end
 					end
-					if methodName == "InvokeServer" or methodName == "Invoke" then
+					if returnsAValue then
 						return previous(...)
 					end
 					previous(...)
 				end)
 				if previous then
 					installed += 1
-					Outgoing.PrototypeInstalled[methodName] = previous
+					Outgoing.PrototypeInstalled[className] = previous
 				end
 			end
-			return installed > 0, string.format("%d prototype method(s) hooked", installed)
+			return installed > 0, string.format("%d of %d prototype method(s) hooked",
+				installed, methodClassCount)
 		end
 
 		function Outgoing.Install()
@@ -4542,7 +4627,7 @@ local SECTION6 = {
 						local info = attributes()
 						Net.Note("callback-assigned",
 							string.format("%s.%s", self.ClassName, key),
-							info.Origin and info.Origin:GetFullName() or "origin unknown")
+							info.Origin and Util.InstanceLabel(info.Origin) or "origin unknown")
 					end)
 				end
 				return original(self, key, value)
@@ -4571,14 +4656,14 @@ local SECTION6 = {
 				if ok then
 					return true, detail
 				end
-				Log.Debug("signal observation failed for", instance:GetFullName(), "-", detail)
+				Log.Debug("signal observation failed for", Util.InstanceLabel(instance), "-", detail)
 				return false, detail
 			end
 			local ok, detail = Incoming.DetourCallback(instance)
 			if ok then
 				return true, detail
 			end
-			Log.Debug("callback detour failed for", instance:GetFullName(), "-", detail)
+			Log.Debug("callback detour failed for", Util.InstanceLabel(instance), "-", detail)
 			return false, detail
 		end
 
@@ -4587,13 +4672,24 @@ local SECTION6 = {
 			local getdescendants = game.GetDescendants
 			local okAll, all = pcall(getdescendants, game)
 			if okAll then
-				for _, instance in ipairs(all) do
+				local function trackSafely(instance)
+				-- pcall here because Track touches signals and properties on an
+				-- instance that may already have been destroyed.
+				local ok, tracked, detail = pcall(Incoming.Track, instance)
+				if not ok then
+					return false, "raised: " .. Util.Truncate(tostring(tracked), 100)
+				end
+				return tracked, detail
+			end
+
+			for _, instance in ipairs(all) do
 					if Net.RemoteClasses[instance.ClassName] then
-						local ok, detail = Incoming.Track(instance)
+						local ok, detail = trackSafely(instance)
 						if ok then
 							tracked += 1
 						else
-							failed[#failed + 1] = string.format("%s (%s)", instance:GetFullName(), tostring(detail))
+							failed[#failed + 1] = string.format("%s (%s)",
+								Util.InstanceLabel(instance), tostring(detail))
 						end
 					end
 				end
@@ -4604,11 +4700,12 @@ local SECTION6 = {
 			local connection = game.DescendantAdded:Connect(function(instance)
 				if Net.RemoteClasses[instance.ClassName] then
 					task.defer(function()
-						local ok, detail = Incoming.Track(instance)
+						local ok, detail = trackSafely(instance)
 						if ok then
 							tracked += 1
 						else
-							failed[#failed + 1] = string.format("%s (%s)", instance:GetFullName(), tostring(detail))
+							failed[#failed + 1] = string.format("%s (%s)",
+								Util.InstanceLabel(instance), tostring(detail))
 						end
 					end)
 				end
