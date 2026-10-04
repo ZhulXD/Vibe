@@ -2427,11 +2427,20 @@ local SECTION4 = {
 		--- Normalises the several shapes executors use for `getproperties`.
 		--- Anything that does not survive a successful read is discarded, so a
 		--- wrong shape degrades to fewer properties rather than to wrong ones.
+		---
+		--- `assumeRbxBehaviour` is FALSE on purpose. Passing true makes the
+		--- executor enforce client restrictions while it enumerates, which means
+		--- it reads every property internally and the engine emits the
+		--- 'PrivateServerId cannot be checked on the client' message during the
+		--- enumeration itself. That happens before any name reaches the skip
+		--- list, which is why skipping the property did nothing. Enumerating
+		--- without that flag is silent; the skip list still ensures those values
+		--- are never actually read by AIDump.
 		local function namesFromExecutor(instance)
 			local names = {}
 			local getproperties = Compat.Get("getproperties")
 			if getproperties then
-				local ok, result = pcall(getproperties, instance, true)
+				local ok, result = pcall(getproperties, instance, false)
 				if ok and type(result) == "table" then
 					for key, value in pairs(result) do
 						if type(key) == "number" then
@@ -2452,7 +2461,7 @@ local SECTION4 = {
 			if #names == 0 then
 				local gethiddenproperties = Compat.Get("gethiddenproperties")
 				if gethiddenproperties then
-					local ok, result = pcall(gethiddenproperties, instance, true)
+					local ok, result = pcall(gethiddenproperties, instance, false)
 					if ok and type(result) == "table" then
 						for key, value in pairs(result) do
 							if type(key) == "number" and type(value) == "string" then
@@ -3771,8 +3780,16 @@ local BYTECODE_MODULES = {
 				Warnings = {},
 			}
 
-			-- Structural invariants. These are what make a wrong layout
-			-- assumption detectable instead of silently corrupting the output.
+			--- Structural invariants. These are what make a wrong layout assumption
+			-- detectable instead of silently corrupting the output.
+			--
+			-- The decisive one is full-buffer consumption. A correct parse of a
+			-- whole chunk accounts for essentially every byte; a parse that stops
+			-- halfway has misread a size field and everything after it is fiction.
+			-- That check was added after the parser produced a confident-looking
+			-- disassembly reporting 'code 3 k 0 upvals 58' while consuming only
+			-- 200 of 378 bytes, which is indistinguishable from nonsense unless
+			-- consumption is required.
 			local problems = {}
 			local function check(condition, message)
 				if not condition then
@@ -3783,16 +3800,30 @@ local BYTECODE_MODULES = {
 			check(state.protos >= 1, "no protos parsed")
 			check(reader:Remaining() >= 0, "cursor advanced past end of buffer")
 
+			local consumed = reader.Pos - 1
+			local total = #bytes
+			-- Allow a small trailer: some executors wrap bytecode in an envelope.
+			local trailerTolerance = math.max(16, math.floor(total * 0.05))
+			if consumed < total - trailerTolerance then
+				problems[#problems + 1] = string.format(
+					"parse consumed %d of %d bytes; %d unread, so the layout does not match this bytecode version",
+					consumed, total, total - consumed)
+			end
+
+			-- A handful of instructions alongside dozens of upvalues and no
+			-- constants is not a plausible function, it is a misread.
+			if root.SizeUpvalues > 8 and root.CodeSize < 8 then
+				problems[#problems + 1] = string.format(
+					"implausible proto: %d instructions with %d upvalues",
+					root.CodeSize, root.SizeUpvalues)
+			end
+
 			if #problems > 0 then
 				reader:Fail("validation failed: " .. table.concat(problems, "; "))
 			end
 			return result
 		end
 
-		--- Parses a bytecode blob. Some executors wrap the bytecode in an
-		--- envelope, so a bounded scan for a self-consistent start offset is
-		--- attempted before giving up. Because every candidate must pass full
-		--- validation, a false positive is unlikely.
 		function Bytecode.Deserialize(bytes)
 			if type(bytes) ~= "string" then
 				if type(bytes) == "buffer" then
@@ -3805,27 +3836,21 @@ local BYTECODE_MODULES = {
 				return nil, "empty bytecode"
 			end
 
-			local firstFailure = nil
-			local scanLimit = math.min(#bytes, 96)
-			for offset = 1, scanLimit do
-				local ok, result = pcall(parseAt, bytes, offset)
-				if ok then
-					result.ScanOffset = offset - 1
-					if offset > 1 then
-						result.Warnings[#result.Warnings + 1] = string.format(
-							"bytecode did not begin at offset 0; self-consistent header found at offset %d",
-							offset - 1
-						)
-					end
-					return result
-				end
-				if offset == 1 and type(result) == "table" and result.__bytecodeError then
-					firstFailure = result.Message
-				end
+			-- Only offset 0 is attempted. Scanning forward for a "self-consistent"
+			-- header is gone: on this client the real header at offset 0 did not
+			-- parse, and the scanner then found a mid-stream byte that satisfied
+			-- every check, producing a confident disassembly of the wrong bytes.
+			-- A blob that does not parse at offset 0 is not understood, and saying
+			-- so is the correct answer.
+			local ok, result = pcall(parseAt, bytes, 1)
+			if ok then
+				result.ScanOffset = 0
+				return result
 			end
-			return nil, firstFailure or string.format(
-				"no self-consistent bytecode header found in the first %d bytes", scanLimit
-			)
+			if type(result) == "table" and result.__bytecodeError then
+				return nil, result.Message
+			end
+			return nil, "unrecognised failure: " .. Util.Truncate(tostring(result), 160)
 		end
 
 		---------------------------------------------------------------------
@@ -8202,17 +8227,23 @@ local SECTION10 = {
 
 		local function check(name, fn)
 			local ok, detail = pcall(fn)
-			if ok and detail == true then
-				detail = "ok"
-			elseif ok and detail == nil then
+			if ok and detail == nil then
 				detail = "ok"
 			end
+			-- A check that reports failure in its detail string must not be
+			-- allowed to pass. It did exactly that once: the bytecode check
+			-- returned "FAILED: getscriptbytecode returned nil" and the report
+			-- read '14 passed, 0 failed'. Only a thrown error or an explicit false
+			-- counts as failure, and a detail that announces one is honoured.
+			local announcedFailure = type(detail) == "string"
+				and detail:sub(1, 7) == "FAILED:"
+			local passed = ok and detail ~= false and not announcedFailure
 			SelfTest.Results[#SelfTest.Results + 1] = {
 				Name = name,
-				Passed = ok and detail ~= false,
+				Passed = passed,
 				Detail = Util.Truncate(tostring(detail), 200),
 			}
-			if ok and detail ~= false then
+			if passed then
 				SelfTest.Passed += 1
 			else
 				SelfTest.Failed += 1
